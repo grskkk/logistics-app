@@ -1,0 +1,18 @@
+{
+  "name": "logistics-app",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:mobile": "npm run dev --workspace=apps/mobile",
+    "build": "npm run build --workspaces"
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true
+  }
+}

@@ -1,0 +1,59 @@
+import { Pool } from "pg";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+export async function initDb(): Promise<void> {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS drivers (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      phone TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'available',
+      vehicle_id INT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS vehicles (
+      id SERIAL PRIMARY KEY,
+      license_plate TEXT UNIQUE NOT NULL,
+      type TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'available',
+      driver_id INT,
+      location JSONB,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS brand TEXT;
+    ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS model TEXT;
+    ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS fuel_type TEXT;
+    ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS capacity_liters NUMERIC;
+    ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS lease_start_date DATE;
+    ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS archived BOOLEAN NOT NULL DEFAULT FALSE;
+
+    CREATE TABLE IF NOT EXISTS maintenance_logs (
+      id SERIAL PRIMARY KEY,
+      vehicle_id INT NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
+      service_type TEXT NOT NULL,
+      notes TEXT,
+      performed_at DATE NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS shipments (
+      id SERIAL PRIMARY KEY,
+      tracking_number TEXT UNIQUE NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      origin JSONB NOT NULL,
+      destination JSONB NOT NULL,
+      driver_id INT,
+      vehicle_id INT,
+      estimated_delivery TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+}
