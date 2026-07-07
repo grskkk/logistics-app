@@ -1,0 +1,127 @@
+import { useEffect, useRef, useState } from "react";
+import type { FleetNotification } from "@logistics/shared";
+import { api } from "../api/client";
+
+const severityColor: Record<string, string> = {
+  high: "#DC2626",
+  medium: "#D97706",
+  low: "#6B7280",
+};
+
+const typeIcon: Record<string, string> = {
+  no_replacement: "🔴",
+  long_repair: "🟡",
+  non_operational: "🔴",
+};
+
+export default function NotificationPanel() {
+  const [open, setOpen] = useState(false);
+  const [notes, setNotes] = useState<FleetNotification[]>([]);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    api.get<FleetNotification[]>("/notifications").then(setNotes).catch(console.error);
+    const id = setInterval(() => {
+      api.get<FleetNotification[]>("/notifications").then(setNotes).catch(console.error);
+    }, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (open && panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const high = notes.filter((n) => n.severity === "high").length;
+  const count = notes.length;
+
+  return (
+    <div ref={panelRef} style={{ position: "relative", marginLeft: "auto" }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          background: "none", border: "none", cursor: "pointer",
+          position: "relative", padding: "4px 8px", display: "flex", alignItems: "center",
+        }}
+        title="Notifications"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={count > 0 ? "#FBBF24" : "#A8A29E"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        {count > 0 && (
+          <span style={{
+            position: "absolute", top: 0, right: 2,
+            background: high > 0 ? "#DC2626" : "#D97706",
+            color: "#fff", fontSize: 10, fontWeight: 800,
+            borderRadius: 99, minWidth: 16, height: 16,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "0 3px",
+          }}>
+            {count > 99 ? "99+" : count}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 8px)", right: 0,
+          width: 380, maxHeight: 520, borderRadius: 12,
+          background: "#fff", boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
+          zIndex: 200, display: "flex", flexDirection: "column",
+          border: "1px solid #E7E5E4",
+        }}>
+          <div style={{
+            padding: "14px 18px", borderBottom: "1px solid #F5F5F4",
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+          }}>
+            <span style={{ fontWeight: 700, fontSize: 15 }}>Fleet Alerts</span>
+            <span style={{ fontSize: 12, color: "#A8A29E" }}>
+              {high > 0 && <span style={{ color: "#DC2626", fontWeight: 700 }}>{high} urgent · </span>}
+              {count} total
+            </span>
+          </div>
+
+          <div style={{ overflowY: "auto", flex: 1 }}>
+            {count === 0 && (
+              <div style={{ padding: 32, textAlign: "center", color: "#A8A29E", fontSize: 14 }}>
+                No alerts — fleet looks good!
+              </div>
+            )}
+            {["high", "medium", "low"].map((sev) => {
+              const group = notes.filter((n) => n.severity === sev);
+              if (!group.length) return null;
+              return (
+                <div key={sev}>
+                  <div style={{ padding: "8px 18px 4px", fontSize: 11, fontWeight: 700, color: severityColor[sev], textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    {sev === "high" ? "Urgent" : sev === "medium" ? "Warning" : "Info"}
+                  </div>
+                  {group.map((n) => (
+                    <div key={n.id} style={{
+                      padding: "12px 18px", borderBottom: "1px solid #F5F5F4",
+                      display: "flex", gap: 10, alignItems: "flex-start",
+                    }}>
+                      <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{typeIcon[n.type]}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, fontSize: 13, color: "#1C1917" }}>{n.title}</div>
+                        <div style={{ fontSize: 12, color: "#78716C", marginTop: 2, lineHeight: 1.4 }}>{n.body}</div>
+                        {n.hub && (
+                          <div style={{ fontSize: 11, color: "#A8A29E", marginTop: 4 }}>Hub: {n.hub}</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

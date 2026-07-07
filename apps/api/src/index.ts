@@ -7,6 +7,7 @@ import vehiclesRouter from "./routes/vehicles";
 import driversRouter from "./routes/drivers";
 import maintenanceRouter from "./routes/maintenance";
 import replacementsRouter from "./routes/replacements";
+import notificationsRouter from "./routes/notifications";
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use("/api/vehicles", vehiclesRouter);
 app.use("/api/drivers", driversRouter);
 app.use("/api/maintenance", maintenanceRouter);
 app.use("/api/replacements", replacementsRouter);
+app.use("/api/notifications", notificationsRouter);
 
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 

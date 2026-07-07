@@ -2,6 +2,7 @@ import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Fleet from "./pages/Fleet";
 import Drivers from "./pages/Drivers";
+import NotificationPanel from "./components/NotificationPanel";
 
 const linkStyle = { color: "#A8A29E", textDecoration: "none", fontWeight: 500, fontSize: 14, padding: "6px 12px", borderRadius: 6 };
 const activeStyle = { color: "#FFFFFF", background: "rgba(217,119,87,0.2)" };
@@ -15,6 +16,7 @@ export default function App() {
           <NavLink to="/" style={({ isActive }) => ({ ...linkStyle, ...(isActive ? activeStyle : {}), whiteSpace: "nowrap" })} end>Dashboard</NavLink>
           <NavLink to="/fleet" style={({ isActive }) => ({ ...linkStyle, ...(isActive ? activeStyle : {}), whiteSpace: "nowrap" })}>Fleet</NavLink>
           <NavLink to="/drivers" style={({ isActive }) => ({ ...linkStyle, ...(isActive ? activeStyle : {}), whiteSpace: "nowrap" })}>Drivers</NavLink>
+          <NotificationPanel />
         </nav>
         <div style={{ flex: 1 }}>
           <Routes>

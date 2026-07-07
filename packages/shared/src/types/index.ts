@@ -62,6 +62,18 @@ export interface MaintenanceLog {
   createdAt: string;
 }
 
+export interface FleetNotification {
+  id: string;
+  type: "no_replacement" | "long_repair" | "non_operational";
+  severity: "high" | "medium" | "low";
+  vehicleId: number;
+  licensePlate: string;
+  title: string;
+  body: string;
+  hub: string | null;
+  daysIn?: number;
+}
+
 export interface Shipment {
   id: number;
   trackingNumber: string;
