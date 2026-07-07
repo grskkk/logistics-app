@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  SafeAreaView, ScrollView, TextInput, Alert,
+  ScrollView, TextInput, Alert,
 } from "react-native";
 import type { Vehicle } from "@logistics/shared";
 import { apiFetch } from "../api/client";
@@ -47,7 +47,7 @@ export default function ReportIssueScreen({ vehicle, onBack }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <TouchableOpacity onPress={onBack}>
@@ -101,12 +101,12 @@ export default function ReportIssueScreen({ vehicle, onBack }: Props) {
           <Text style={styles.submitText}>{submitting ? "Submitting..." : "Submit Report"}</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F9F7F4" },
+  safe: { flex: 1 },
   container: { padding: 20, paddingBottom: 40 },
   header: { marginBottom: 20 },
   back: { color: "#D97757", fontSize: 17, fontWeight: "600" },

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, SafeAreaView, TextInput,
+  ActivityIndicator, TextInput,
 } from "react-native";
 import type { Driver } from "@logistics/shared";
 import { apiFetch } from "../api/client";
@@ -29,7 +29,7 @@ export default function LoginScreen({ onLogin }: Props) {
   if (loading) return <ActivityIndicator style={{ flex: 1 }} color="#D97757" />;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.safe}>
       <View style={styles.container}>
         <Text style={styles.logo}>LogiTrack</Text>
         <Text style={styles.heading}>Who are you?</Text>
@@ -65,12 +65,12 @@ export default function LoginScreen({ onLogin }: Props) {
           }
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F9F7F4" },
+  safe: { flex: 1 },
   container: { flex: 1, padding: 20 },
   logo: { color: "#D97757", fontWeight: "800", fontSize: 22, letterSpacing: -0.5, marginBottom: 24 },
   heading: { fontSize: 26, fontWeight: "800", color: "#1C1917", marginBottom: 4 },

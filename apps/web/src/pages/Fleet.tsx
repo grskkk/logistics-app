@@ -30,6 +30,7 @@ export default function Fleet() {
   const [sortAZ, setSortAZ] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterHub, setFilterHub] = useState<string>("all");
+  const [filterType, setFilterType] = useState<string>("all");
   const driverMap = Object.fromEntries(drivers.map((d) => [d.id, d]));
   const [showArchived, setShowArchived] = useState(false);
 
@@ -80,6 +81,34 @@ export default function Fleet() {
           )}
         </div>
       </div>
+
+      {!showArchived && (() => {
+        const types = ["van", "truck", "bike", "car"];
+        const typeLabel: Record<string, string> = { van: "Van", truck: "Truck", bike: "Bike", car: "Car" };
+        return (
+          <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
+            {(["all", ...types] as string[]).map((t) => {
+              const count = t === "all" ? vehicles.length : vehicles.filter((v) => v.type === t).length;
+              const active = filterType === t;
+              return (
+                <button
+                  key={t}
+                  onClick={() => setFilterType(t)}
+                  style={{
+                    padding: "5px 14px", borderRadius: 20, fontSize: 13, fontWeight: 700,
+                    cursor: "pointer", fontFamily: "inherit",
+                    background: active ? "#1C1917" : "#fff",
+                    color: active ? "#fff" : "#57534E",
+                    border: `1px solid ${active ? "transparent" : "#E7E5E4"}`,
+                  }}
+                >
+                  {t === "all" ? "All Types" : typeLabel[t]} <span style={{ opacity: 0.65 }}>({count})</span>
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {!showArchived && (() => {
         const hubs = ["Athens", "Alimos", "Menidi", "Mandra", "Paiania"];
@@ -182,6 +211,7 @@ export default function Fleet() {
               : v.status === filterStatus
             )
             .filter((v) => filterHub === "all" || v.hub === filterHub)
+            .filter((v) => filterType === "all" || v.type === filterType)
             .sort((a, b) => sortAZ ? a.licensePlate.localeCompare(b.licensePlate) : a.id - b.id)
             .map((v) => (
             <tr key={v.id} style={{ borderTop: "1px solid #F5F5F4" }}>

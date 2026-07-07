@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ActivityIndicator, SafeAreaView, ScrollView, Alert,
+  ActivityIndicator, ScrollView, Alert,
 } from "react-native";
 import type { Driver, Vehicle } from "@logistics/shared";
 import { apiFetch } from "../api/client";
@@ -78,7 +78,7 @@ export default function HomeScreen({ driver: initialDriver, onLogout, onReportIs
   if (loading) return <ActivityIndicator style={{ flex: 1 }} color="#D97757" />;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <View>
@@ -141,12 +141,12 @@ export default function HomeScreen({ driver: initialDriver, onLogout, onReportIs
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F9F7F4" },
+  safe: { flex: 1 },
   container: { padding: 20, paddingBottom: 40 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 },
   logo: { color: "#D97757", fontWeight: "800", fontSize: 16, letterSpacing: -0.3, marginBottom: 2 },
