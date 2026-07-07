@@ -4,6 +4,7 @@ import { api } from "../api/client";
 import MaintenanceDrawer from "../components/MaintenanceDrawer";
 import VehicleEditDrawer from "../components/VehicleEditDrawer";
 import AddVehicleModal from "../components/AddVehicleModal";
+import ReplacementVehicleModal from "../components/ReplacementVehicleModal";
 
 const statusColor: Record<string, string> = {
   operational: "#16A34A",
@@ -25,8 +26,10 @@ export default function Fleet() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [replacementVehicle, setReplacementVehicle] = useState<Vehicle | null>(null);
   const [sortAZ, setSortAZ] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterHub, setFilterHub] = useState<string>("all");
   const driverMap = Object.fromEntries(drivers.map((d) => [d.id, d]));
   const [showArchived, setShowArchived] = useState(false);
 
@@ -78,22 +81,64 @@ export default function Fleet() {
         </div>
       </div>
 
+      {!showArchived && (() => {
+        const hubs = ["Athens", "Alimos", "Menidi", "Mandra", "Paiania"];
+        return (
+          <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
+            {(["all", ...hubs] as string[]).map((hub) => {
+              const count = hub === "all" ? vehicles.length : vehicles.filter((v) => v.hub === hub).length;
+              const active = filterHub === hub;
+              return (
+                <button
+                  key={hub}
+                  onClick={() => setFilterHub(hub)}
+                  style={{
+                    padding: "5px 14px", borderRadius: 20, fontSize: 13, fontWeight: 700,
+                    cursor: "pointer", fontFamily: "inherit",
+                    background: active ? "#1C1917" : "#fff",
+                    color: active ? "#fff" : "#57534E",
+                    border: `1px solid ${active ? "transparent" : "#E7E5E4"}`,
+                  }}
+                >
+                  {hub === "all" ? "All Hubs" : hub} <span style={{ opacity: 0.65 }}>({count})</span>
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
+
       {!showArchived && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-          {[["all", "All"], ...Object.entries(statusLabel)].map(([val, lbl]) => {
-            const count = val === "all" ? vehicles.length : vehicles.filter((v) => v.status === val).length;
+        <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+          {([
+            ["all", "All", "#57534E"],
+            ["operational", "Operational", "#16A34A"],
+            ["on_route", "On Route", "#D97757"],
+            ["in_maintenance", "In Maintenance", "#CA8A04"],
+            ["in_maintenance_repl", "↳ With Replacement", "#CA8A04"],
+            ["in_maintenance_no_repl", "↳ No Replacement", "#CA8A04"],
+            ["non_operational", "Non Operational", "#DC2626"],
+          ] as [string, string, string][]).map(([val, lbl, color]) => {
+            const isSub = val.startsWith("in_maintenance_");
+            const count =
+              val === "all" ? vehicles.length
+              : val === "in_maintenance_repl" ? vehicles.filter((v) => v.status === "in_maintenance" && v.hasActiveReplacement).length
+              : val === "in_maintenance_no_repl" ? vehicles.filter((v) => v.status === "in_maintenance" && !v.hasActiveReplacement).length
+              : vehicles.filter((v) => v.status === val).length;
             const active = filterStatus === val;
-            const color = val === "all" ? "#57534E" : statusColor[val];
             return (
               <button
                 key={val}
                 onClick={() => setFilterStatus(val)}
                 style={{
-                  padding: "5px 14px", borderRadius: 20, fontSize: 13, fontWeight: 700,
+                  padding: isSub ? "3px 12px" : "5px 14px",
+                  borderRadius: 20, fontSize: isSub ? 12 : 13, fontWeight: 700,
                   cursor: "pointer", fontFamily: "inherit",
-                  background: active ? (val === "all" ? "#1C1917" : color) : "#fff",
-                  color: active ? "#fff" : (val === "all" ? "#57534E" : color),
-                  border: `1px solid ${active ? "transparent" : (val === "all" ? "#E7E5E4" : color + "66")}`,
+                  marginLeft: isSub ? 0 : 0,
+                  opacity: isSub && filterStatus !== "in_maintenance" && !active ? 0.65 : 1,
+                  background: active ? (val === "all" ? "#1C1917" : color) : (isSub ? "#FFF7ED" : "#fff"),
+                  color: active ? "#fff" : color,
+                  border: `1px solid ${active ? "transparent" : color + (isSub ? "99" : "66")}`,
                 }}
               >
                 {lbl} <span style={{ opacity: 0.75 }}>({count})</span>
@@ -118,6 +163,8 @@ export default function Fleet() {
             </th>
             <th style={{ padding: "12px 16px" }}>Brand & Model</th>
             <th style={{ padding: "12px 16px" }}>Type</th>
+            <th style={{ padding: "12px 16px" }}>Hub</th>
+            <th style={{ padding: "12px 16px" }}>Leasing</th>
             <th style={{ padding: "12px 16px" }}>Status</th>
             <th style={{ padding: "12px 16px" }}>Driver</th>
             <th style={{ padding: "12px 16px" }}></th>
@@ -128,7 +175,13 @@ export default function Fleet() {
             <tr><td colSpan={5} style={{ padding: 24, textAlign: "center", color: "#94a3b8" }}>No vehicles yet.</td></tr>
           )}
           {[...vehicles]
-            .filter((v) => filterStatus === "all" || v.status === filterStatus)
+            .filter((v) =>
+              filterStatus === "all" ? true
+              : filterStatus === "in_maintenance_repl" ? v.status === "in_maintenance" && v.hasActiveReplacement
+              : filterStatus === "in_maintenance_no_repl" ? v.status === "in_maintenance" && !v.hasActiveReplacement
+              : v.status === filterStatus
+            )
+            .filter((v) => filterHub === "all" || v.hub === filterHub)
             .sort((a, b) => sortAZ ? a.licensePlate.localeCompare(b.licensePlate) : a.id - b.id)
             .map((v) => (
             <tr key={v.id} style={{ borderTop: "1px solid #F5F5F4" }}>
@@ -140,6 +193,8 @@ export default function Fleet() {
                   : <span style={{ color: "#94a3b8" }}>—</span>}
               </td>
               <td style={{ padding: "12px 16px", textTransform: "capitalize" }}>{v.type}</td>
+              <td style={{ padding: "12px 16px", color: v.hub ? "#1C1917" : "#A8A29E", fontSize: 13 }}>{v.hub ?? "—"}</td>
+              <td style={{ padding: "12px 16px", color: v.leaseCompany ? "#1C1917" : "#A8A29E", fontSize: 13 }}>{v.leaseCompany ?? "—"}</td>
               <td style={{ padding: "12px 16px" }}>
                 <select
                   value={v.status}
@@ -171,16 +226,24 @@ export default function Fleet() {
                     <>
                       <button
                         onClick={() => setEditingVehicle(v)}
-                        style={{ padding: "4px 12px", borderRadius: 6, border: "1px solid #cbd5e1", background: "#f8fafc", fontSize: 12, fontWeight: 600, cursor: "pointer", color: "#475569" }}
+                        style={{ padding: "4px 12px", borderRadius: 6, border: "1px solid #E7E5E4", background: "#FAF9F7", fontSize: 12, fontWeight: 700, cursor: "pointer", color: "#57534E", fontFamily: "inherit" }}
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => setSelectedVehicle(v)}
-                        style={{ padding: "4px 12px", borderRadius: 6, border: "1px solid #cbd5e1", background: "#f8fafc", fontSize: 12, fontWeight: 600, cursor: "pointer", color: "#475569" }}
+                        style={{ padding: "4px 12px", borderRadius: 6, border: "1px solid #E7E5E4", background: "#FAF9F7", fontSize: 12, fontWeight: 700, cursor: "pointer", color: "#57534E", fontFamily: "inherit" }}
                       >
                         Maintenance Log
                       </button>
+                      {v.status === "in_maintenance" && (
+                        <button
+                          onClick={() => setReplacementVehicle(v)}
+                          style={{ padding: "4px 12px", borderRadius: 6, border: "1px solid #FED7AA", background: "#FFF7ED", fontSize: 12, fontWeight: 700, cursor: "pointer", color: "#C2410C", fontFamily: "inherit" }}
+                        >
+                          Replacement
+                        </button>
+                      )}
                     </>
                   )}
                   <button
@@ -203,6 +266,10 @@ export default function Fleet() {
 
       {selectedVehicle && (
         <MaintenanceDrawer vehicle={selectedVehicle} onClose={() => setSelectedVehicle(null)} />
+      )}
+
+      {replacementVehicle && (
+        <ReplacementVehicleModal vehicle={replacementVehicle} onClose={() => setReplacementVehicle(null)} />
       )}
 
       {editingVehicle && (

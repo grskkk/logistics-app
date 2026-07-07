@@ -10,6 +10,8 @@ function mapLog(row: Record<string, unknown>) {
     serviceType: row.service_type,
     notes: row.notes,
     performedAt: row.performed_at,
+    workshop: row.workshop,
+    kmAtService: row.km_at_service,
     createdAt: row.created_at,
   };
 }
@@ -23,11 +25,11 @@ router.get("/:vehicleId", async (req, res) => {
 });
 
 router.post("/:vehicleId", async (req, res) => {
-  const { serviceType, notes, performedAt } = req.body;
+  const { serviceType, notes, performedAt, workshop, kmAtService } = req.body;
   const { rows } = await pool.query(
-    `INSERT INTO maintenance_logs (vehicle_id, service_type, notes, performed_at)
-     VALUES ($1, $2, $3, $4) RETURNING *`,
-    [req.params.vehicleId, serviceType, notes ?? null, performedAt]
+    `INSERT INTO maintenance_logs (vehicle_id, service_type, notes, performed_at, workshop, km_at_service)
+     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+    [req.params.vehicleId, serviceType, notes ?? null, performedAt, workshop ?? null, kmAtService ?? null]
   );
   res.status(201).json(mapLog(rows[0]));
 });

@@ -33,6 +33,25 @@ export async function initDb(): Promise<void> {
     ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS capacity_liters NUMERIC;
     ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS lease_start_date DATE;
     ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS archived BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS lease_company TEXT;
+    ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS hub TEXT;
+
+    ALTER TABLE maintenance_logs ADD COLUMN IF NOT EXISTS workshop TEXT;
+    ALTER TABLE maintenance_logs ADD COLUMN IF NOT EXISTS km_at_service INTEGER;
+
+    CREATE TABLE IF NOT EXISTS replacement_vehicles (
+      id SERIAL PRIMARY KEY,
+      vehicle_id INT NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
+      license_plate TEXT NOT NULL,
+      brand TEXT,
+      model TEXT,
+      type TEXT,
+      lease_company TEXT,
+      start_date DATE NOT NULL,
+      end_date DATE,
+      notes TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
 
     CREATE TABLE IF NOT EXISTS maintenance_logs (
       id SERIAL PRIMARY KEY,

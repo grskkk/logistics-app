@@ -14,7 +14,10 @@ function mapVehicle(row: Record<string, unknown>) {
     fuelType: row.fuel_type,
     capacityLiters: row.capacity_liters,
     leaseStartDate: row.lease_start_date,
+    leaseCompany: row.lease_company,
+    hub: row.hub,
     archived: row.archived,
+    hasActiveReplacement: row.has_active_replacement ?? false,
     driverId: row.driver_id,
     location: row.location,
     updatedAt: row.updated_at,
@@ -24,17 +27,24 @@ function mapVehicle(row: Record<string, unknown>) {
 router.get("/", async (req, res) => {
   const showArchived = req.query.archived === "true";
   const { rows } = await pool.query(
-    "SELECT * FROM vehicles WHERE archived = $1 ORDER BY id",
+    `SELECT v.*,
+       EXISTS(
+         SELECT 1 FROM replacement_vehicles r
+         WHERE r.vehicle_id = v.id AND r.end_date IS NULL
+       ) AS has_active_replacement
+     FROM vehicles v
+     WHERE v.archived = $1
+     ORDER BY v.id`,
     [showArchived]
   );
   res.json(rows.map(mapVehicle));
 });
 
 router.post("/", async (req, res) => {
-  const { licensePlate, type, status, brand, model, fuelType, capacityLiters, leaseStartDate } = req.body;
+  const { licensePlate, type, status, brand, model, fuelType, capacityLiters, leaseStartDate, leaseCompany, hub } = req.body;
   const { rows } = await pool.query(
-    `INSERT INTO vehicles (license_plate, type, status, brand, model, fuel_type, capacity_liters, lease_start_date)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+    `INSERT INTO vehicles (license_plate, type, status, brand, model, fuel_type, capacity_liters, lease_start_date, lease_company, hub)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
     [
       licensePlate,
       type,
@@ -44,13 +54,15 @@ router.post("/", async (req, res) => {
       fuelType ?? null,
       capacityLiters ?? null,
       leaseStartDate ?? null,
+      leaseCompany ?? null,
+      hub ?? null,
     ]
   );
   res.status(201).json(mapVehicle(rows[0]));
 });
 
 router.put("/:id", async (req, res) => {
-  const { licensePlate, type, status, brand, model, driverId, location, fuelType, capacityLiters, leaseStartDate, archived } = req.body;
+  const { licensePlate, type, status, brand, model, driverId, location, fuelType, capacityLiters, leaseStartDate, leaseCompany, hub, archived } = req.body;
   const { rows } = await pool.query(
     `UPDATE vehicles SET
      license_plate = COALESCE($1, license_plate),
@@ -63,9 +75,11 @@ router.put("/:id", async (req, res) => {
      fuel_type = COALESCE($8, fuel_type),
      capacity_liters = COALESCE($9, capacity_liters),
      lease_start_date = COALESCE($10, lease_start_date),
-     archived = COALESCE($11, archived),
+     lease_company = COALESCE($11, lease_company),
+     hub = COALESCE($12, hub),
+     archived = COALESCE($13, archived),
      updated_at = NOW()
-     WHERE id = $12 RETURNING *`,
+     WHERE id = $14 RETURNING *`,
     [
       licensePlate ?? null,
       type ?? null,
@@ -77,6 +91,8 @@ router.put("/:id", async (req, res) => {
       fuelType ?? null,
       capacityLiters ?? null,
       leaseStartDate ?? null,
+      leaseCompany ?? null,
+      hub ?? null,
       archived ?? null,
       req.params.id,
     ]

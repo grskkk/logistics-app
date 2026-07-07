@@ -21,17 +21,34 @@ export interface Driver {
 export interface Vehicle {
   id: number;
   licensePlate: string;
-  type: "van" | "truck" | "bike";
+  type: "van" | "truck" | "bike" | "car";
   status: VehicleStatus;
   brand: string | null;
   model: string | null;
   fuelType: "gas" | "diesel" | "electric" | null;
   capacityLiters: number | null;
   leaseStartDate: string | null;
+  leaseCompany: string | null;
+  hub: string | null;
   archived: boolean;
+  hasActiveReplacement: boolean;
   driverId: number | null;
   location: Location | null;
   updatedAt: string;
+}
+
+export interface ReplacementVehicle {
+  id: number;
+  vehicleId: number;
+  licensePlate: string;
+  brand: string | null;
+  model: string | null;
+  type: string | null;
+  leaseCompany: string | null;
+  startDate: string;
+  endDate: string | null;
+  notes: string | null;
+  createdAt: string;
 }
 
 export interface MaintenanceLog {
@@ -40,6 +57,8 @@ export interface MaintenanceLog {
   serviceType: string;
   notes: string | null;
   performedAt: string;
+  workshop: string | null;
+  kmAtService: number | null;
   createdAt: string;
 }
 

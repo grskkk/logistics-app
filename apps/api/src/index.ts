@@ -6,6 +6,7 @@ import shipmentsRouter from "./routes/shipments";
 import vehiclesRouter from "./routes/vehicles";
 import driversRouter from "./routes/drivers";
 import maintenanceRouter from "./routes/maintenance";
+import replacementsRouter from "./routes/replacements";
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ app.use("/api/shipments", shipmentsRouter);
 app.use("/api/vehicles", vehiclesRouter);
 app.use("/api/drivers", driversRouter);
 app.use("/api/maintenance", maintenanceRouter);
+app.use("/api/replacements", replacementsRouter);
 
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 

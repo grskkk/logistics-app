@@ -16,13 +16,15 @@ interface Props {
 
 export default function AddVehicleModal({ onClose, onAdded }: Props) {
   const [licensePlate, setLicensePlate] = useState("");
-  const [type, setType] = useState<"van" | "truck" | "bike">("van");
+  const [type, setType] = useState<"van" | "truck" | "bike" | "car">("van");
   const [status, setStatus] = useState<VehicleStatus>("operational");
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [fuelType, setFuelType] = useState("");
   const [capacityLiters, setCapacityLiters] = useState("");
   const [leaseStartDate, setLeaseStartDate] = useState("");
+  const [leaseCompany, setLeaseCompany] = useState("");
+  const [hub, setHub] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -41,6 +43,8 @@ export default function AddVehicleModal({ onClose, onAdded }: Props) {
         fuelType: fuelType || null,
         capacityLiters: capacityLiters ? parseFloat(capacityLiters) : null,
         leaseStartDate: leaseStartDate || null,
+        leaseCompany: leaseCompany || null,
+        hub: hub || null,
       });
       onAdded();
       onClose();
@@ -110,6 +114,7 @@ export default function AddVehicleModal({ onClose, onAdded }: Props) {
                 <option value="van">Van</option>
                 <option value="truck">Truck</option>
                 <option value="bike">Bike</option>
+                <option value="car">Car</option>
               </select>
             </div>
             <div style={{ ...field, flex: 1 }}>
@@ -145,14 +150,32 @@ export default function AddVehicleModal({ onClose, onAdded }: Props) {
             />
           </div>
 
+          <div style={{ display: "flex", gap: 12 }}>
+            <div style={{ ...field, flex: 1 }}>
+              <label style={label}>Leasing Company</label>
+              <select value={leaseCompany} onChange={(e) => setLeaseCompany(e.target.value)} style={input}>
+                <option value="">— None —</option>
+                <option>Avis</option>
+                <option>Ayvens</option>
+                <option>LeasePlan</option>
+              </select>
+            </div>
+            <div style={{ ...field, flex: 1 }}>
+              <label style={label}>Hub</label>
+              <select value={hub} onChange={(e) => setHub(e.target.value)} style={input}>
+                <option value="">— None —</option>
+                <option>Athens</option>
+                <option>Alimos</option>
+                <option>Menidi</option>
+                <option>Mandra</option>
+                <option>Paiania</option>
+              </select>
+            </div>
+          </div>
+
           <div style={field}>
             <label style={label}>Lease Start Date</label>
-            <input
-              type="date"
-              value={leaseStartDate}
-              onChange={(e) => setLeaseStartDate(e.target.value)}
-              style={input}
-            />
+            <input type="date" value={leaseStartDate} onChange={(e) => setLeaseStartDate(e.target.value)} style={input} />
             <span style={{ fontSize: 11, color: "#94a3b8" }}>Leave blank if vehicle is owned</span>
           </div>
 

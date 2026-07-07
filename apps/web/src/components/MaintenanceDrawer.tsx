@@ -26,6 +26,8 @@ export default function MaintenanceDrawer({ vehicle, onClose }: Props) {
   const [serviceType, setServiceType] = useState(SERVICE_TYPES[0]);
   const [notes, setNotes] = useState("");
   const [performedAt, setPerformedAt] = useState(new Date().toISOString().slice(0, 10));
+  const [workshop, setWorkshop] = useState("");
+  const [kmAtService, setKmAtService] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const load = () =>
@@ -37,10 +39,14 @@ export default function MaintenanceDrawer({ vehicle, onClose }: Props) {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await api.post(`/maintenance/${vehicle.id}`, { serviceType, notes: notes || null, performedAt });
-      setNotes("");
-      setServiceType(SERVICE_TYPES[0]);
+      await api.post(`/maintenance/${vehicle.id}`, {
+        serviceType, notes: notes || null, performedAt,
+        workshop: workshop || null,
+        kmAtService: kmAtService ? parseInt(kmAtService) : null,
+      });
+      setNotes(""); setServiceType(SERVICE_TYPES[0]);
       setPerformedAt(new Date().toISOString().slice(0, 10));
+      setWorkshop(""); setKmAtService("");
       await load();
     } finally {
       setSubmitting(false);
@@ -87,14 +93,24 @@ export default function MaintenanceDrawer({ vehicle, onClose }: Props) {
               />
             </div>
           </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Workshop (optional)</label>
+              <input value={workshop} onChange={(e) => setWorkshop(e.target.value)} placeholder="e.g. Avis Μεταμόρφωση" style={{ padding: "7px 10px", borderRadius: 6, border: "1px solid #cbd5e1", fontSize: 13, fontFamily: "inherit" }} />
+            </div>
+            <div style={{ width: 110, display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>KM at service</label>
+              <input type="number" value={kmAtService} onChange={(e) => setKmAtService(e.target.value)} placeholder="e.g. 45000" style={{ padding: "7px 10px", borderRadius: 6, border: "1px solid #cbd5e1", fontSize: 13, fontFamily: "inherit" }} />
+            </div>
+          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <label style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Notes (optional)</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="e.g. Replaced front brake pads, rear at 60%..."
-              rows={3}
-              style={{ padding: "7px 10px", borderRadius: 6, border: "1px solid #cbd5e1", fontSize: 13, resize: "vertical" }}
+              rows={2}
+              style={{ padding: "7px 10px", borderRadius: 6, border: "1px solid #cbd5e1", fontSize: 13, resize: "vertical", fontFamily: "inherit" }}
             />
           </div>
           <button
@@ -116,11 +132,17 @@ export default function MaintenanceDrawer({ vehicle, onClose }: Props) {
           {logs.map((log) => (
             <div key={log.id} style={{ borderLeft: "3px solid #D97757", paddingLeft: 14, marginBottom: 18 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontWeight: 600, fontSize: 14 }}>{log.serviceType}</span>
+                <span style={{ fontWeight: 700, fontSize: 14, color: "#1C1917" }}>{log.serviceType}</span>
                 <span style={{ fontSize: 12, color: "#94a3b8" }}>
                   {new Date(log.performedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                 </span>
               </div>
+              {(log.workshop || log.kmAtService) && (
+                <div style={{ fontSize: 12, color: "#78716C", marginTop: 3, display: "flex", gap: 12 }}>
+                  {log.workshop && <span>📍 {log.workshop}</span>}
+                  {log.kmAtService && <span>⟳ {log.kmAtService.toLocaleString()} km</span>}
+                </div>
+              )}
               {log.notes && <div style={{ fontSize: 13, color: "#475569", marginTop: 4 }}>{log.notes}</div>}
             </div>
           ))}

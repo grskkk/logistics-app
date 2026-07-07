@@ -26,6 +26,8 @@ export default function VehicleEditDrawer({ vehicle, onClose, onSaved }: Props) 
   const [leaseStartDate, setLeaseStartDate] = useState(
     vehicle.leaseStartDate ? vehicle.leaseStartDate.slice(0, 10) : ""
   );
+  const [leaseCompany, setLeaseCompany] = useState(vehicle.leaseCompany ?? "");
+  const [hub, setHub] = useState(vehicle.hub ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -43,6 +45,8 @@ export default function VehicleEditDrawer({ vehicle, onClose, onSaved }: Props) 
         fuelType: fuelType || null,
         capacityLiters: capacityLiters ? parseFloat(capacityLiters) : null,
         leaseStartDate: leaseStartDate || null,
+        leaseCompany: leaseCompany || null,
+        hub: hub || null,
       });
       onSaved(updated);
       onClose();
@@ -113,6 +117,7 @@ export default function VehicleEditDrawer({ vehicle, onClose, onSaved }: Props) 
                 <option value="van">Van</option>
                 <option value="truck">Truck</option>
                 <option value="bike">Bike</option>
+                <option value="car">Car</option>
               </select>
             </div>
             <div style={{ ...field, flex: 1 }}>
@@ -146,6 +151,29 @@ export default function VehicleEditDrawer({ vehicle, onClose, onSaved }: Props) 
               placeholder="e.g. 1200"
               style={input}
             />
+          </div>
+
+          <div style={{ display: "flex", gap: 12 }}>
+            <div style={{ ...field, flex: 1 }}>
+              <label style={label}>Leasing Company</label>
+              <select value={leaseCompany} onChange={(e) => setLeaseCompany(e.target.value)} style={input}>
+                <option value="">— None —</option>
+                <option>Avis</option>
+                <option>Ayvens</option>
+                <option>LeasePlan</option>
+              </select>
+            </div>
+            <div style={{ ...field, flex: 1 }}>
+              <label style={label}>Hub</label>
+              <select value={hub} onChange={(e) => setHub(e.target.value)} style={input}>
+                <option value="">— None —</option>
+                <option>Athens</option>
+                <option>Alimos</option>
+                <option>Menidi</option>
+                <option>Mandra</option>
+                <option>Paiania</option>
+              </select>
+            </div>
           </div>
 
           <div style={field}>
