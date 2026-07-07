@@ -6,28 +6,34 @@ const router = Router();
 router.get("/", async (_req, res) => {
   const notes: object[] = [];
 
-  // Vehicles in maintenance with no replacement assigned
+  // Vehicles in maintenance with no replacement for >5 days
   const { rows: noRepl } = await pool.query(`
-    SELECT v.id, v.license_plate, v.brand, v.model, v.hub
+    SELECT v.id, v.license_plate, v.brand, v.model, v.hub,
+           COALESCE(MAX(ml.performed_at)::DATE, v.updated_at::DATE) AS since_date,
+           CURRENT_DATE - COALESCE(MAX(ml.performed_at)::DATE, v.updated_at::DATE) AS days_in
     FROM vehicles v
+    LEFT JOIN maintenance_logs ml ON ml.vehicle_id = v.id
     WHERE v.status = 'in_maintenance' AND v.archived = FALSE
       AND NOT EXISTS (
         SELECT 1 FROM replacement_vehicles r
         WHERE r.vehicle_id = v.id AND r.end_date IS NULL
       )
-    ORDER BY v.license_plate
+    GROUP BY v.id, v.license_plate, v.brand, v.model, v.hub, v.updated_at
+    HAVING CURRENT_DATE - COALESCE(MAX(ml.performed_at)::DATE, v.updated_at::DATE) > 5
+    ORDER BY days_in DESC
   `);
 
   for (const r of noRepl) {
     notes.push({
       id: `no-repl-${r.license_plate}`,
       type: "no_replacement",
-      severity: "high",
+      severity: r.days_in >= 14 ? "high" : "medium",
       vehicleId: r.id,
       licensePlate: r.license_plate,
-      title: `No replacement — ${r.license_plate}`,
-      body: `${[r.brand, r.model].filter(Boolean).join(" ")} is in maintenance with no replacement assigned.`,
+      title: `No replacement for ${r.days_in} days — ${r.license_plate}`,
+      body: `${[r.brand, r.model].filter(Boolean).join(" ")} has been in maintenance since ${new Date(r.since_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} with no replacement assigned.`,
       hub: r.hub,
+      daysIn: r.days_in,
     });
   }
 

@@ -11,11 +11,13 @@ export default function App() {
   return (
     <BrowserRouter>
       <div style={{ minHeight: "100vh", background: "#F9F7F4", display: "flex", flexDirection: "column" }}>
-        <nav style={{ display: "flex", alignItems: "center", gap: 4, padding: "0 16px", background: "#1C1917", height: 52, flexShrink: 0, overflowX: "auto", WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"] }}>
+        <nav style={{ display: "flex", alignItems: "center", padding: "0 16px", background: "#1C1917", height: 52, flexShrink: 0 }}>
           <span style={{ color: "#D97757", fontWeight: 800, fontSize: 17, marginRight: 16, letterSpacing: "-0.3px", whiteSpace: "nowrap" }}>LogiTrack</span>
-          <NavLink to="/" style={({ isActive }) => ({ ...linkStyle, ...(isActive ? activeStyle : {}), whiteSpace: "nowrap" })} end>Dashboard</NavLink>
-          <NavLink to="/fleet" style={({ isActive }) => ({ ...linkStyle, ...(isActive ? activeStyle : {}), whiteSpace: "nowrap" })}>Fleet</NavLink>
-          <NavLink to="/drivers" style={({ isActive }) => ({ ...linkStyle, ...(isActive ? activeStyle : {}), whiteSpace: "nowrap" })}>Drivers</NavLink>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, flex: 1, overflowX: "auto", WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"] }}>
+            <NavLink to="/" style={({ isActive }) => ({ ...linkStyle, ...(isActive ? activeStyle : {}), whiteSpace: "nowrap" })} end>Dashboard</NavLink>
+            <NavLink to="/fleet" style={({ isActive }) => ({ ...linkStyle, ...(isActive ? activeStyle : {}), whiteSpace: "nowrap" })}>Fleet</NavLink>
+            <NavLink to="/drivers" style={({ isActive }) => ({ ...linkStyle, ...(isActive ? activeStyle : {}), whiteSpace: "nowrap" })}>Drivers</NavLink>
+          </div>
           <NotificationPanel />
         </nav>
         <div style={{ flex: 1 }}>
