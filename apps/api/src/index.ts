@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
 import { initDb } from "./db";
 import shipmentsRouter from "./routes/shipments";
 import vehiclesRouter from "./routes/vehicles";
@@ -25,6 +26,11 @@ app.use("/api/replacements", replacementsRouter);
 app.use("/api/notifications", notificationsRouter);
 
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
+
+// Serve web frontend in production
+const publicDir = path.join(__dirname, "../public");
+app.use(express.static(publicDir));
+app.get("*", (_req, res) => res.sendFile(path.join(publicDir, "index.html")));
 
 initDb()
   .then(() => {
