@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import type { Driver, Vehicle } from "@logistics/shared";
 import { api } from "../api/client";
 import MaintenanceDrawer from "../components/MaintenanceDrawer";
@@ -18,6 +18,16 @@ const statusLabel: Record<string, string> = {
   on_route: "On Route",
   in_maintenance: "In Maintenance",
   non_operational: "Non Operational",
+};
+
+const filterRowLabelStyle: CSSProperties = {
+  fontSize: 11,
+  fontWeight: 800,
+  color: "#A8A29E",
+  textTransform: "uppercase",
+  letterSpacing: 0.5,
+  width: 44,
+  flexShrink: 0,
 };
 
 export default function Fleet() {
@@ -82,98 +92,120 @@ export default function Fleet() {
         </div>
       </div>
 
-      {!showArchived && (() => {
-        const types = ["van", "truck", "bike", "car"];
-        const typeLabel: Record<string, string> = { van: "Van", truck: "Truck", bike: "Bike", car: "Car" };
-        return (
-          <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
-            {(["all", ...types] as string[]).map((t) => {
-              const count = t === "all" ? vehicles.length : vehicles.filter((v) => v.type === t).length;
-              const active = filterType === t;
-              return (
-                <button
-                  key={t}
-                  onClick={() => setFilterType(t)}
-                  style={{
-                    padding: "5px 14px", borderRadius: 20, fontSize: 13, fontWeight: 700,
-                    cursor: "pointer", fontFamily: "inherit",
-                    background: active ? "#1C1917" : "#fff",
-                    color: active ? "#fff" : "#57534E",
-                    border: `1px solid ${active ? "transparent" : "#E7E5E4"}`,
-                  }}
-                >
-                  {t === "all" ? "All Types" : typeLabel[t]} <span style={{ opacity: 0.65 }}>({count})</span>
-                </button>
-              );
-            })}
-          </div>
-        );
-      })()}
-
-      {!showArchived && (() => {
-        const hubs = ["Athens", "Alimos", "Menidi", "Mandra", "Paiania"];
-        return (
-          <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
-            {(["all", ...hubs] as string[]).map((hub) => {
-              const count = hub === "all" ? vehicles.length : vehicles.filter((v) => v.hub === hub).length;
-              const active = filterHub === hub;
-              return (
-                <button
-                  key={hub}
-                  onClick={() => setFilterHub(hub)}
-                  style={{
-                    padding: "5px 14px", borderRadius: 20, fontSize: 13, fontWeight: 700,
-                    cursor: "pointer", fontFamily: "inherit",
-                    background: active ? "#1C1917" : "#fff",
-                    color: active ? "#fff" : "#57534E",
-                    border: `1px solid ${active ? "transparent" : "#E7E5E4"}`,
-                  }}
-                >
-                  {hub === "all" ? "All Hubs" : hub} <span style={{ opacity: 0.65 }}>({count})</span>
-                </button>
-              );
-            })}
-          </div>
-        );
-      })()}
-
       {!showArchived && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-          {([
-            ["all", "All", "#57534E"],
-            ["operational", "Operational", "#16A34A"],
-            ["on_route", "On Route", "#D97757"],
-            ["in_maintenance", "In Maintenance", "#CA8A04"],
-            ["in_maintenance_repl", "↳ With Replacement", "#CA8A04"],
-            ["in_maintenance_no_repl", "↳ No Replacement", "#CA8A04"],
-            ["non_operational", "Non Operational", "#DC2626"],
-          ] as [string, string, string][]).map(([val, lbl, color]) => {
-            const isSub = val.startsWith("in_maintenance_");
-            const count =
-              val === "all" ? vehicles.length
-              : val === "in_maintenance_repl" ? vehicles.filter((v) => v.status === "in_maintenance" && v.hasActiveReplacement).length
-              : val === "in_maintenance_no_repl" ? vehicles.filter((v) => v.status === "in_maintenance" && !v.hasActiveReplacement).length
-              : vehicles.filter((v) => v.status === val).length;
-            const active = filterStatus === val;
+        <div
+          style={{
+            background: "#fff",
+            border: "1px solid #E7E5E4",
+            borderRadius: 12,
+            padding: "14px 16px",
+            marginBottom: 16,
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
+          }}
+        >
+          {(() => {
+            const types = ["van", "truck", "bike", "car"];
+            const typeLabel: Record<string, string> = { van: "Van", truck: "Truck", bike: "Bike", car: "Car" };
             return (
-              <button
-                key={val}
-                onClick={() => setFilterStatus(val)}
-                style={{
-                  padding: isSub ? "3px 12px" : "5px 14px",
-                  borderRadius: 20, fontSize: isSub ? 12 : 13, fontWeight: 700,
-                  cursor: "pointer", fontFamily: "inherit",
-                  marginLeft: isSub ? 0 : 0,
-                  opacity: isSub && filterStatus !== "in_maintenance" && !active ? 0.65 : 1,
-                  background: active ? (val === "all" ? "#1C1917" : color) : (isSub ? "#FFF7ED" : "#fff"),
-                  color: active ? "#fff" : color,
-                  border: `1px solid ${active ? "transparent" : color + (isSub ? "99" : "66")}`,
-                }}
-              >
-                {lbl} <span style={{ opacity: 0.75 }}>({count})</span>
-              </button>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                <span style={filterRowLabelStyle}>Type</span>
+                {(["all", ...types] as string[]).map((t) => {
+                  const count = t === "all" ? vehicles.length : vehicles.filter((v) => v.type === t).length;
+                  const active = filterType === t;
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => setFilterType(t)}
+                      style={{
+                        padding: "5px 14px", borderRadius: 20, fontSize: 13, fontWeight: 700,
+                        cursor: "pointer", fontFamily: "inherit", transition: "background 0.15s, color 0.15s",
+                        background: active ? "#1C1917" : "#fff",
+                        color: active ? "#fff" : "#57534E",
+                        border: `1px solid ${active ? "transparent" : "#E7E5E4"}`,
+                        boxShadow: active ? "0 1px 2px rgba(0,0,0,0.12)" : "none",
+                      }}
+                    >
+                      {t === "all" ? "All Types" : typeLabel[t]} <span style={{ opacity: 0.65 }}>({count})</span>
+                    </button>
+                  );
+                })}
+              </div>
             );
-          })}
+          })()}
+
+          <div style={{ borderTop: "1px solid #F5F5F4" }} />
+
+          {(() => {
+            const hubs = ["Athens", "Alimos", "Menidi", "Mandra", "Paiania"];
+            return (
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                <span style={filterRowLabelStyle}>Hub</span>
+                {(["all", ...hubs] as string[]).map((hub) => {
+                  const count = hub === "all" ? vehicles.length : vehicles.filter((v) => v.hub === hub).length;
+                  const active = filterHub === hub;
+                  return (
+                    <button
+                      key={hub}
+                      onClick={() => setFilterHub(hub)}
+                      style={{
+                        padding: "5px 14px", borderRadius: 20, fontSize: 13, fontWeight: 700,
+                        cursor: "pointer", fontFamily: "inherit", transition: "background 0.15s, color 0.15s",
+                        background: active ? "#1C1917" : "#fff",
+                        color: active ? "#fff" : "#57534E",
+                        border: `1px solid ${active ? "transparent" : "#E7E5E4"}`,
+                        boxShadow: active ? "0 1px 2px rgba(0,0,0,0.12)" : "none",
+                      }}
+                    >
+                      {hub === "all" ? "All Hubs" : hub} <span style={{ opacity: 0.65 }}>({count})</span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          <div style={{ borderTop: "1px solid #F5F5F4" }} />
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <span style={filterRowLabelStyle}>Status</span>
+            {([
+              ["all", "All", "#57534E"],
+              ["operational", "Operational", "#16A34A"],
+              ["on_route", "On Route", "#D97757"],
+              ["in_maintenance", "In Maintenance", "#CA8A04"],
+              ["in_maintenance_repl", "↳ With Replacement", "#CA8A04"],
+              ["in_maintenance_no_repl", "↳ No Replacement", "#CA8A04"],
+              ["non_operational", "Non Operational", "#DC2626"],
+            ] as [string, string, string][]).map(([val, lbl, color]) => {
+              const isSub = val.startsWith("in_maintenance_");
+              const count =
+                val === "all" ? vehicles.length
+                : val === "in_maintenance_repl" ? vehicles.filter((v) => v.status === "in_maintenance" && v.hasActiveReplacement).length
+                : val === "in_maintenance_no_repl" ? vehicles.filter((v) => v.status === "in_maintenance" && !v.hasActiveReplacement).length
+                : vehicles.filter((v) => v.status === val).length;
+              const active = filterStatus === val;
+              return (
+                <button
+                  key={val}
+                  onClick={() => setFilterStatus(val)}
+                  style={{
+                    padding: isSub ? "3px 12px" : "5px 14px",
+                    borderRadius: 20, fontSize: isSub ? 12 : 13, fontWeight: 700,
+                    cursor: "pointer", fontFamily: "inherit", transition: "background 0.15s, color 0.15s",
+                    opacity: isSub && filterStatus !== "in_maintenance" && !active ? 0.65 : 1,
+                    background: active ? (val === "all" ? "#1C1917" : color) : (isSub ? "#FFF7ED" : "#fff"),
+                    color: active ? "#fff" : color,
+                    border: `1px solid ${active ? "transparent" : color + (isSub ? "99" : "66")}`,
+                    boxShadow: active ? "0 1px 2px rgba(0,0,0,0.12)" : "none",
+                  }}
+                >
+                  {lbl} <span style={{ opacity: 0.75 }}>({count})</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
