@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Driver, Vehicle } from "@logistics/shared";
 import { api } from "../api/client";
 import MaintenanceDrawer from "../components/MaintenanceDrawer";
@@ -20,17 +20,7 @@ const statusLabel: Record<string, string> = {
   non_operational: "Non Operational",
 };
 
-const filterRowLabelStyle: CSSProperties = {
-  fontSize: 11,
-  fontWeight: 800,
-  color: "#A8A29E",
-  textTransform: "uppercase",
-  letterSpacing: 0.5,
-  width: 44,
-  flexShrink: 0,
-};
-
-type FilterOption = { value: string; label: string; count: number };
+type FilterOption = { value: string; label: string; count: number; color?: string; indent?: boolean };
 
 function FilterDropdown({
   label,
@@ -72,6 +62,9 @@ function FilterDropdown({
         <span style={{ opacity: 0.6, fontWeight: 800, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>
           {label}
         </span>
+        {selected.color && !active && (
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: selected.color, flexShrink: 0 }} />
+        )}
         <span>{selected.label}</span>
         <span style={{ opacity: 0.65 }}>({selected.count})</span>
         <span style={{ fontSize: 9, opacity: 0.7 }}>{open ? "▲" : "▼"}</span>
@@ -81,7 +74,7 @@ function FilterDropdown({
           style={{
             position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 20,
             background: "#fff", border: "1px solid #E7E5E4", borderRadius: 10,
-            boxShadow: "0 8px 24px rgba(0,0,0,0.14)", minWidth: 190, padding: 4,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.14)", minWidth: 210, padding: 4,
           }}
         >
           {options.map((o) => {
@@ -92,13 +85,18 @@ function FilterDropdown({
                 onClick={() => { onChange(o.value); setOpen(false); }}
                 style={{
                   display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%",
-                  padding: "7px 10px", borderRadius: 6, border: "none",
+                  padding: "7px 10px", paddingLeft: o.indent ? 26 : 10, borderRadius: 6, border: "none",
                   background: isActive ? "#F5F5F4" : "transparent",
-                  color: "#1C1917", fontWeight: isActive ? 700 : 500, fontSize: 13,
+                  color: "#1C1917", fontWeight: isActive ? 700 : 500, fontSize: o.indent ? 12.5 : 13,
                   cursor: "pointer", fontFamily: "inherit", textAlign: "left",
                 }}
               >
-                <span>{o.label}</span>
+                <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  {o.color && (
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: o.color, flexShrink: 0 }} />
+                  )}
+                  {o.label}
+                </span>
                 <span style={{ opacity: 0.5, fontSize: 12 }}>{o.count}</span>
               </button>
             );
@@ -210,44 +208,32 @@ export default function Fleet() {
 
           <div style={{ borderTop: "1px solid #F5F5F4" }} />
 
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-            <span style={filterRowLabelStyle}>Status</span>
-            {([
+          {(() => {
+            const statusOptions: FilterOption[] = ([
               ["all", "All", "#57534E"],
               ["operational", "Operational", "#16A34A"],
               ["on_route", "On Route", "#D97757"],
               ["in_maintenance", "In Maintenance", "#CA8A04"],
-              ["in_maintenance_repl", "↳ With Replacement", "#CA8A04"],
-              ["in_maintenance_no_repl", "↳ No Replacement", "#CA8A04"],
+              ["in_maintenance_repl", "With Replacement", "#CA8A04"],
+              ["in_maintenance_no_repl", "No Replacement", "#CA8A04"],
               ["non_operational", "Non Operational", "#DC2626"],
-            ] as [string, string, string][]).map(([val, lbl, color]) => {
-              const isSub = val.startsWith("in_maintenance_");
-              const count =
+            ] as [string, string, string][]).map(([val, lbl, color]) => ({
+              value: val,
+              label: lbl,
+              color,
+              indent: val.startsWith("in_maintenance_"),
+              count:
                 val === "all" ? vehicles.length
                 : val === "in_maintenance_repl" ? vehicles.filter((v) => v.status === "in_maintenance" && v.hasActiveReplacement).length
                 : val === "in_maintenance_no_repl" ? vehicles.filter((v) => v.status === "in_maintenance" && !v.hasActiveReplacement).length
-                : vehicles.filter((v) => v.status === val).length;
-              const active = filterStatus === val;
-              return (
-                <button
-                  key={val}
-                  onClick={() => setFilterStatus(val)}
-                  style={{
-                    padding: isSub ? "3px 12px" : "5px 14px",
-                    borderRadius: 20, fontSize: isSub ? 12 : 13, fontWeight: 700,
-                    cursor: "pointer", fontFamily: "inherit", transition: "background 0.15s, color 0.15s",
-                    opacity: isSub && filterStatus !== "in_maintenance" && !active ? 0.65 : 1,
-                    background: active ? (val === "all" ? "#1C1917" : color) : (isSub ? "#FFF7ED" : "#fff"),
-                    color: active ? "#fff" : color,
-                    border: `1px solid ${active ? "transparent" : color + (isSub ? "99" : "66")}`,
-                    boxShadow: active ? "0 1px 2px rgba(0,0,0,0.12)" : "none",
-                  }}
-                >
-                  {lbl} <span style={{ opacity: 0.75 }}>({count})</span>
-                </button>
-              );
-            })}
-          </div>
+                : vehicles.filter((v) => v.status === val).length,
+            }));
+            return (
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <FilterDropdown label="Status" options={statusOptions} value={filterStatus} onChange={setFilterStatus} />
+              </div>
+            );
+          })()}
         </div>
       )}
 
