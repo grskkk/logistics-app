@@ -3,11 +3,11 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const isLocalDb = /localhost|127\.0\.0\.1/.test(process.env.DATABASE_URL ?? "");
+
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes("supabase.co")
-    ? { rejectUnauthorized: false }
-    : false,
+  ssl: isLocalDb ? false : { rejectUnauthorized: false },
 });
 
 export async function initDb(): Promise<void> {

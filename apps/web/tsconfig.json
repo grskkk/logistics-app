@@ -3,7 +3,8 @@
   "compilerOptions": {
     "module": "ESNext",
     "jsx": "react-jsx",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"]
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "noEmit": true
   },
   "include": ["src"]
 }
