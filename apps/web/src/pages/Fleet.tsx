@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { Driver, Vehicle } from "@logistics/shared";
 import { api } from "../api/client";
 import MaintenanceDrawer from "../components/MaintenanceDrawer";
@@ -29,6 +29,85 @@ const filterRowLabelStyle: CSSProperties = {
   width: 44,
   flexShrink: 0,
 };
+
+type FilterOption = { value: string; label: string; count: number };
+
+function FilterDropdown({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: FilterOption[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find((o) => o.value === value) ?? options[0];
+  const active = value !== "all";
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          display: "flex", alignItems: "center", gap: 6,
+          padding: "6px 12px", borderRadius: 8, fontSize: 13, fontWeight: 700,
+          cursor: "pointer", fontFamily: "inherit",
+          background: active ? "#1C1917" : "#fff",
+          color: active ? "#fff" : "#57534E",
+          border: `1px solid ${active ? "transparent" : "#E7E5E4"}`,
+        }}
+      >
+        <span style={{ opacity: 0.6, fontWeight: 800, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>
+          {label}
+        </span>
+        <span>{selected.label}</span>
+        <span style={{ opacity: 0.65 }}>({selected.count})</span>
+        <span style={{ fontSize: 9, opacity: 0.7 }}>{open ? "▲" : "▼"}</span>
+      </button>
+      {open && (
+        <div
+          style={{
+            position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 20,
+            background: "#fff", border: "1px solid #E7E5E4", borderRadius: 10,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.14)", minWidth: 190, padding: 4,
+          }}
+        >
+          {options.map((o) => {
+            const isActive = o.value === value;
+            return (
+              <button
+                key={o.value}
+                onClick={() => { onChange(o.value); setOpen(false); }}
+                style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%",
+                  padding: "7px 10px", borderRadius: 6, border: "none",
+                  background: isActive ? "#F5F5F4" : "transparent",
+                  color: "#1C1917", fontWeight: isActive ? 700 : 500, fontSize: 13,
+                  cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+                }}
+              >
+                <span>{o.label}</span>
+                <span style={{ opacity: 0.5, fontSize: 12 }}>{o.count}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Fleet() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -108,60 +187,23 @@ export default function Fleet() {
           {(() => {
             const types = ["van", "truck", "bike", "car"];
             const typeLabel: Record<string, string> = { van: "Van", truck: "Truck", bike: "Bike", car: "Car" };
-            return (
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                <span style={filterRowLabelStyle}>Type</span>
-                {(["all", ...types] as string[]).map((t) => {
-                  const count = t === "all" ? vehicles.length : vehicles.filter((v) => v.type === t).length;
-                  const active = filterType === t;
-                  return (
-                    <button
-                      key={t}
-                      onClick={() => setFilterType(t)}
-                      style={{
-                        padding: "5px 14px", borderRadius: 20, fontSize: 13, fontWeight: 700,
-                        cursor: "pointer", fontFamily: "inherit", transition: "background 0.15s, color 0.15s",
-                        background: active ? "#1C1917" : "#fff",
-                        color: active ? "#fff" : "#57534E",
-                        border: `1px solid ${active ? "transparent" : "#E7E5E4"}`,
-                        boxShadow: active ? "0 1px 2px rgba(0,0,0,0.12)" : "none",
-                      }}
-                    >
-                      {t === "all" ? "All Types" : typeLabel[t]} <span style={{ opacity: 0.65 }}>({count})</span>
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })()}
-
-          <div style={{ borderTop: "1px solid #F5F5F4" }} />
-
-          {(() => {
             const hubs = ["Athens", "Alimos", "Menidi", "Mandra", "Paiania"];
+
+            const typeOptions: FilterOption[] = (["all", ...types] as string[]).map((t) => ({
+              value: t,
+              label: t === "all" ? "All Types" : typeLabel[t],
+              count: t === "all" ? vehicles.length : vehicles.filter((v) => v.type === t).length,
+            }));
+            const hubOptions: FilterOption[] = (["all", ...hubs] as string[]).map((hub) => ({
+              value: hub,
+              label: hub === "all" ? "All Hubs" : hub,
+              count: hub === "all" ? vehicles.length : vehicles.filter((v) => v.hub === hub).length,
+            }));
+
             return (
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                <span style={filterRowLabelStyle}>Hub</span>
-                {(["all", ...hubs] as string[]).map((hub) => {
-                  const count = hub === "all" ? vehicles.length : vehicles.filter((v) => v.hub === hub).length;
-                  const active = filterHub === hub;
-                  return (
-                    <button
-                      key={hub}
-                      onClick={() => setFilterHub(hub)}
-                      style={{
-                        padding: "5px 14px", borderRadius: 20, fontSize: 13, fontWeight: 700,
-                        cursor: "pointer", fontFamily: "inherit", transition: "background 0.15s, color 0.15s",
-                        background: active ? "#1C1917" : "#fff",
-                        color: active ? "#fff" : "#57534E",
-                        border: `1px solid ${active ? "transparent" : "#E7E5E4"}`,
-                        boxShadow: active ? "0 1px 2px rgba(0,0,0,0.12)" : "none",
-                      }}
-                    >
-                      {hub === "all" ? "All Hubs" : hub} <span style={{ opacity: 0.65 }}>({count})</span>
-                    </button>
-                  );
-                })}
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <FilterDropdown label="Type" options={typeOptions} value={filterType} onChange={setFilterType} />
+                <FilterDropdown label="Hub" options={hubOptions} value={filterHub} onChange={setFilterHub} />
               </div>
             );
           })()}
