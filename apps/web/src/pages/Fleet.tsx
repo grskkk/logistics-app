@@ -9,14 +9,12 @@ import ReplacementVehicleModal from "../components/ReplacementVehicleModal";
 
 const statusColor: Record<string, string> = {
   operational: "#16A34A",
-  on_route: "#D97757",
   in_maintenance: "#CA8A04",
   non_operational: "#DC2626",
 };
 
 const statusLabel: Record<string, string> = {
   operational: "Operational",
-  on_route: "On Route",
   in_maintenance: "In Maintenance",
   non_operational: "Non Operational",
 };
@@ -216,7 +214,6 @@ export default function Fleet() {
         const statusOptions: FilterOption[] = ([
           ["all", "All", "#57534E"],
           ["operational", "Operational", "#16A34A"],
-          ["on_route", "On Route", "#D97757"],
           ["in_maintenance", "In Maintenance", "#CA8A04"],
           ["in_maintenance_repl", "With Replacement", "#CA8A04"],
           ["in_maintenance_no_repl", "No Replacement", "#CA8A04"],

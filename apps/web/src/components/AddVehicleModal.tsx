@@ -4,7 +4,6 @@ import { api } from "../api/client";
 
 const statusLabel: Record<VehicleStatus, string> = {
   operational: "Operational",
-  on_route: "On Route",
   in_maintenance: "In Maintenance",
   non_operational: "Non Operational",
 };

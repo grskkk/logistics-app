@@ -1,5 +1,5 @@
 export type ShipmentStatus = "pending" | "picked_up" | "in_transit" | "delivered" | "failed";
-export type VehicleStatus = "operational" | "on_route" | "in_maintenance" | "non_operational";
+export type VehicleStatus = "operational" | "in_maintenance" | "non_operational";
 export type DriverStatus = "available" | "on_duty" | "offline";
 
 export interface Location {

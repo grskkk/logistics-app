@@ -24,13 +24,11 @@ const statusLabel: Record<string, string> = {
 };
 const vehicleStatusColor: Record<string, string> = {
   operational: "#16A34A",
-  on_route: "#D97757",
   in_maintenance: "#CA8A04",
   non_operational: "#DC2626",
 };
 const vehicleStatusLabel: Record<string, string> = {
   operational: "Operational",
-  on_route: "On Route",
   in_maintenance: "In Maintenance",
   non_operational: "Non Operational",
 };
