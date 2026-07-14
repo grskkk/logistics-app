@@ -80,7 +80,7 @@ export default function HomeScreen({ driver: initialDriver, onLogout, onReportIs
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.logo}>LogiTrack</Text>
+            <Text style={styles.logo}>Vanakias</Text>
             <Text style={styles.greeting}>Hello, {driver.name.split(" ")[0]}</Text>
           </View>
           <TouchableOpacity onPress={onLogout} style={styles.logoutBtn}>

@@ -31,7 +31,7 @@ export default function LoginScreen({ onLogin }: Props) {
   return (
     <View style={styles.safe}>
       <View style={styles.container}>
-        <Text style={styles.logo}>LogiTrack</Text>
+        <Text style={styles.logo}>Vanakias</Text>
         <Text style={styles.heading}>Who are you?</Text>
         <Text style={styles.sub}>Select your name to start your shift</Text>
 

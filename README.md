@@ -1,4 +1,4 @@
-# LogiTrack — Fleet Management App
+# Vanakias — Fleet Management App
 
 A full-stack fleet management platform for managing vehicles, drivers, and maintenance history.
 
