@@ -22,7 +22,6 @@ export default function Dashboard() {
 
   const vByStatus = {
     operational: vehicles.filter((v) => v.status === "operational").length,
-    on_route: vehicles.filter((v) => v.status === "on_route").length,
     in_maintenance: vehicles.filter((v) => v.status === "in_maintenance").length,
     non_operational: vehicles.filter((v) => v.status === "non_operational").length,
   };
@@ -46,10 +45,6 @@ export default function Dashboard() {
         <div style={statCard("Operational", vByStatus.operational, "#16A34A")}>
           <div style={{ fontSize: 30, fontWeight: 800, color: "#1C1917" }}>{vByStatus.operational}</div>
           <div style={{ color: "#78716C", fontSize: 13, marginTop: 2 }}>Operational</div>
-        </div>
-        <div style={statCard("On Route", vByStatus.on_route, "#D97757")}>
-          <div style={{ fontSize: 30, fontWeight: 800, color: "#1C1917" }}>{vByStatus.on_route}</div>
-          <div style={{ color: "#78716C", fontSize: 13, marginTop: 2 }}>On Route</div>
         </div>
         <div style={statCard("In Maintenance", vByStatus.in_maintenance, "#CA8A04")}>
           <div style={{ fontSize: 30, fontWeight: 800, color: "#1C1917" }}>{vByStatus.in_maintenance}</div>
