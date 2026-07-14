@@ -8,7 +8,7 @@ from datetime import datetime, date
 
 import psycopg2
 
-CSV_PATH = "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet -   VAN (1).csv"
+CSV_PATH = "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet -   VAN (2).csv"
 DB_URL = "postgresql://giorgoskefalakis@localhost:5432/logistics"
 
 TODAY = date.today()
@@ -220,8 +220,10 @@ def main():
         # A license plate or "service" in that column means the vehicle is in maintenance.
         if repl_is_plate or repl_is_service:
             status = 'in_maintenance'
+            maintenance_since = repl_date if repl_is_plate and repl_date else (maint_date or TODAY)
         else:
             status = 'operational'
+            maintenance_since = None
 
         fuel_type = detect_fuel(model)
 
@@ -231,13 +233,13 @@ def main():
                 """
                 INSERT INTO vehicles
                   (license_plate, type, status, brand, model, fuel_type,
-                   lease_start_date, lease_company, hub, archived)
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,FALSE)
+                   lease_start_date, lease_company, hub, archived, maintenance_since)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,FALSE,%s)
                 ON CONFLICT (license_plate) DO NOTHING
                 RETURNING id
                 """,
                 (plate, vtype, status, brand, model, fuel_type,
-                 lease_start, lease_co, hub)
+                 lease_start, lease_co, hub, maintenance_since)
             )
             result = cur.fetchone()
             if result is None:

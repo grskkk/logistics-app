@@ -8,7 +8,7 @@ import psycopg2
 from datetime import datetime
 
 DB_URL = "postgresql://giorgoskefalakis@localhost:5432/logistics"
-CSV_PATH = "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet - Van maintenance report (1).csv"
+CSV_PATH = "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet - Van maintenance report (2).csv"
 
 REPAIR_MAP = {
     "Service": "Service",
