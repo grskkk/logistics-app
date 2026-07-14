@@ -23,6 +23,7 @@ interface Props {
 
 export default function MaintenanceDrawer({ vehicle, onClose }: Props) {
   const [logs, setLogs] = useState<MaintenanceLog[]>([]);
+  const [workshops, setWorkshops] = useState<string[]>([]);
   const [serviceType, setServiceType] = useState(SERVICE_TYPES[0]);
   const [notes, setNotes] = useState("");
   const [performedAt, setPerformedAt] = useState(new Date().toISOString().slice(0, 10));
@@ -34,6 +35,9 @@ export default function MaintenanceDrawer({ vehicle, onClose }: Props) {
     api.get<MaintenanceLog[]>(`/maintenance/${vehicle.id}`).then(setLogs).catch(console.error);
 
   useEffect(() => { load(); }, [vehicle.id]);
+  useEffect(() => {
+    api.get<string[]>("/maintenance/workshops/all").then(setWorkshops).catch(console.error);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,7 +100,14 @@ export default function MaintenanceDrawer({ vehicle, onClose }: Props) {
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Workshop (optional)</label>
-              <input value={workshop} onChange={(e) => setWorkshop(e.target.value)} placeholder="e.g. Avis Μεταμόρφωση" style={{ padding: "7px 10px", borderRadius: 6, border: "1px solid #cbd5e1", fontSize: 13, fontFamily: "inherit" }} />
+              <select
+                value={workshop}
+                onChange={(e) => setWorkshop(e.target.value)}
+                style={{ padding: "7px 10px", borderRadius: 6, border: "1px solid #cbd5e1", fontSize: 13, background: "#fff" }}
+              >
+                <option value="">Select workshop...</option>
+                {workshops.map((w) => <option key={w}>{w}</option>)}
+              </select>
             </div>
             <div style={{ width: 110, display: "flex", flexDirection: "column", gap: 4 }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>KM at service</label>

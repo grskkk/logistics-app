@@ -16,6 +16,15 @@ function mapLog(row: Record<string, unknown>) {
   };
 }
 
+router.get("/workshops/all", async (_req, res) => {
+  const { rows } = await pool.query(
+    `SELECT DISTINCT workshop FROM maintenance_logs
+     WHERE workshop IS NOT NULL AND workshop <> ''
+     ORDER BY workshop`
+  );
+  res.json(rows.map((r) => r.workshop));
+});
+
 router.get("/:vehicleId", async (req, res) => {
   const { rows } = await pool.query(
     "SELECT * FROM maintenance_logs WHERE vehicle_id = $1 ORDER BY performed_at DESC",
