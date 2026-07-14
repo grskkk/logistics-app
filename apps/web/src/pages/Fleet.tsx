@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Driver, Vehicle } from "@logistics/shared";
+import type { Vehicle } from "@logistics/shared";
 import { api } from "../api/client";
 import MaintenanceDrawer from "../components/MaintenanceDrawer";
 import VehicleEditDrawer from "../components/VehicleEditDrawer";
@@ -109,7 +109,6 @@ function FilterDropdown({
 
 export default function Fleet() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [drivers, setDrivers] = useState<Driver[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
@@ -118,12 +117,10 @@ export default function Fleet() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterHub, setFilterHub] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
-  const driverMap = Object.fromEntries(drivers.map((d) => [d.id, d]));
   const [showArchived, setShowArchived] = useState(false);
 
   const load = (archived = showArchived) => {
     api.get<Vehicle[]>(`/vehicles?archived=${archived}`).then(setVehicles).catch(console.error);
-    api.get<Driver[]>("/drivers").then(setDrivers).catch(console.error);
   };
 
   const updateStatus = async (id: number, status: string) => {
@@ -289,7 +286,6 @@ export default function Fleet() {
             <th style={{ padding: "12px 16px" }}>Hub</th>
             <th style={{ padding: "12px 16px" }}>Leasing</th>
             <th style={{ padding: "12px 16px" }}>Status</th>
-            <th style={{ padding: "12px 16px" }}>Driver</th>
             <th style={{ padding: "12px 16px" }}></th>
           </tr>
         </thead>
@@ -338,11 +334,6 @@ export default function Fleet() {
                     <option key={val} value={val}>{label}</option>
                   ))}
                 </select>
-              </td>
-              <td style={{ padding: "12px 16px" }}>
-                {v.driverId && driverMap[v.driverId]
-                  ? <span style={{ fontWeight: 600, color: "#1C1917" }}>{driverMap[v.driverId].name}</span>
-                  : <span style={{ color: "#A8A29E" }}>—</span>}
               </td>
               <td style={{ padding: "12px 16px" }}>
                 <div style={{ display: "flex", gap: 6 }}>

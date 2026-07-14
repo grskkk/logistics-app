@@ -34,13 +34,12 @@ export default function Shipments() {
               <th style={{ padding: "12px 16px", fontWeight: 700, color: "#57534E", fontSize: 13 }}>Status</th>
               <th style={{ padding: "12px 16px", fontWeight: 700, color: "#57534E", fontSize: 13 }}>Origin</th>
               <th style={{ padding: "12px 16px", fontWeight: 700, color: "#57534E", fontSize: 13 }}>Destination</th>
-              <th style={{ padding: "12px 16px", fontWeight: 700, color: "#57534E", fontSize: 13 }}>Driver</th>
               <th style={{ padding: "12px 16px", fontWeight: 700, color: "#57534E", fontSize: 13 }}>Est. Delivery</th>
             </tr>
           </thead>
           <tbody>
             {shipments.length === 0 && (
-              <tr><td colSpan={6} style={{ padding: 32, textAlign: "center", color: "#A8A29E" }}>No shipments yet.</td></tr>
+              <tr><td colSpan={5} style={{ padding: 32, textAlign: "center", color: "#A8A29E" }}>No shipments yet.</td></tr>
             )}
             {shipments.map((s) => (
               <tr key={s.id} style={{ borderTop: "1px solid #F5F5F4" }}>
@@ -52,7 +51,6 @@ export default function Shipments() {
                 </td>
                 <td style={{ padding: "12px 16px", color: "#78716C" }}>{s.origin.address ?? `${s.origin.lat}, ${s.origin.lng}`}</td>
                 <td style={{ padding: "12px 16px", color: "#78716C" }}>{s.destination.address ?? `${s.destination.lat}, ${s.destination.lng}`}</td>
-                <td style={{ padding: "12px 16px", color: "#78716C" }}>{s.driverId ?? "—"}</td>
                 <td style={{ padding: "12px 16px", color: "#78716C" }}>{s.estimatedDelivery ? new Date(s.estimatedDelivery).toLocaleDateString() : "—"}</td>
               </tr>
             ))}

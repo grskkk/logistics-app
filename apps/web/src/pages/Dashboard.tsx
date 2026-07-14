@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Driver, Vehicle } from "@logistics/shared";
+import type { Vehicle } from "@logistics/shared";
 import { api } from "../api/client";
 
 const statCard = (label: string, value: number, color: string): React.CSSProperties => ({
@@ -15,11 +15,9 @@ const sectionTitle: React.CSSProperties = {
 
 export default function Dashboard() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [drivers, setDrivers] = useState<Driver[]>([]);
 
   useEffect(() => {
     api.get<Vehicle[]>("/vehicles?archived=false").then(setVehicles).catch(console.error);
-    api.get<Driver[]>("/drivers").then(setDrivers).catch(console.error);
   }, []);
 
   const vByStatus = {
@@ -33,12 +31,6 @@ export default function Dashboard() {
     van: vehicles.filter((v) => v.type === "van").length,
     truck: vehicles.filter((v) => v.type === "truck").length,
     bike: vehicles.filter((v) => v.type === "bike").length,
-  };
-
-  const dByStatus = {
-    available: drivers.filter((d) => d.status === "available").length,
-    on_duty: drivers.filter((d) => d.status === "on_duty").length,
-    offline: drivers.filter((d) => d.status === "offline").length,
   };
 
   const maintenanceVehicles = vehicles.filter((v) => v.status === "in_maintenance");
@@ -69,30 +61,15 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Vehicle types + Drivers side by side */}
-      <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 32 }}>
-
-        {/* By type */}
-        <div style={{ flex: "1 1 200px", background: "#fff", borderRadius: 10, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,.06)" }}>
-          <div style={sectionTitle}>By Type</div>
-          {[["Van", vByType.van, "#D97757"], ["Truck", vByType.truck, "#1C1917"], ["Bike", vByType.bike, "#CA8A04"]].map(([label, count, color]) => (
-            <div key={label as string} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #F5F5F4" }}>
-              <span style={{ fontWeight: 700, color: "#1C1917" }}>{label as string}</span>
-              <span style={{ fontWeight: 800, fontSize: 18, color: color as string }}>{count as number}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Drivers */}
-        <div style={{ flex: "1 1 200px", background: "#fff", borderRadius: 10, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,.06)" }}>
-          <div style={sectionTitle}>Drivers — {drivers.length} total</div>
-          {[["Available", dByStatus.available, "#16A34A"], ["On Duty", dByStatus.on_duty, "#D97757"], ["Offline", dByStatus.offline, "#A8A29E"]].map(([label, count, color]) => (
-            <div key={label as string} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #F5F5F4" }}>
-              <span style={{ fontWeight: 700, color: "#1C1917" }}>{label as string}</span>
-              <span style={{ fontWeight: 800, fontSize: 18, color: color as string }}>{count as number}</span>
-            </div>
-          ))}
-        </div>
+      {/* By type */}
+      <div style={{ maxWidth: 320, background: "#fff", borderRadius: 10, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,.06)", marginBottom: 32 }}>
+        <div style={sectionTitle}>By Type</div>
+        {[["Van", vByType.van, "#D97757"], ["Truck", vByType.truck, "#1C1917"], ["Bike", vByType.bike, "#CA8A04"]].map(([label, count, color]) => (
+          <div key={label as string} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #F5F5F4" }}>
+            <span style={{ fontWeight: 700, color: "#1C1917" }}>{label as string}</span>
+            <span style={{ fontWeight: 800, fontSize: 18, color: color as string }}>{count as number}</span>
+          </div>
+        ))}
       </div>
 
       {/* Maintenance alerts */}
