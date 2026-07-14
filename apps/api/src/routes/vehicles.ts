@@ -42,13 +42,14 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   const { licensePlate, type, status, brand, model, fuelType, capacityLiters, leaseStartDate, leaseCompany, hub } = req.body;
+  const initialStatus = status ?? "operational";
   const { rows } = await pool.query(
-    `INSERT INTO vehicles (license_plate, type, status, brand, model, fuel_type, capacity_liters, lease_start_date, lease_company, hub)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+    `INSERT INTO vehicles (license_plate, type, status, brand, model, fuel_type, capacity_liters, lease_start_date, lease_company, hub, maintenance_since)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
     [
       licensePlate,
       type,
-      status ?? "operational",
+      initialStatus,
       brand ?? null,
       model ?? null,
       fuelType ?? null,
@@ -56,6 +57,7 @@ router.post("/", async (req, res) => {
       leaseStartDate ?? null,
       leaseCompany ?? null,
       hub ?? null,
+      initialStatus === "in_maintenance" ? new Date() : null,
     ]
   );
   res.status(201).json(mapVehicle(rows[0]));
@@ -78,6 +80,11 @@ router.put("/:id", async (req, res) => {
      lease_company = COALESCE($11, lease_company),
      hub = COALESCE($12, hub),
      archived = COALESCE($13, archived),
+     maintenance_since = CASE
+       WHEN COALESCE($3, status) = 'in_maintenance' AND status IS DISTINCT FROM 'in_maintenance' THEN CURRENT_DATE
+       WHEN COALESCE($3, status) IS DISTINCT FROM 'in_maintenance' THEN NULL
+       ELSE maintenance_since
+     END,
      updated_at = NOW()
      WHERE id = $14 RETURNING *`,
     [

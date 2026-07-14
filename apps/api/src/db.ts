@@ -40,6 +40,7 @@ export async function initDb(): Promise<void> {
     ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS archived BOOLEAN NOT NULL DEFAULT FALSE;
     ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS lease_company TEXT;
     ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS hub TEXT;
+    ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS maintenance_since DATE;
 
     ALTER TABLE maintenance_logs ADD COLUMN IF NOT EXISTS workshop TEXT;
     ALTER TABLE maintenance_logs ADD COLUMN IF NOT EXISTS km_at_service INTEGER;

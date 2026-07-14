@@ -9,17 +9,15 @@ router.get("/", async (_req, res) => {
   // Vehicles in maintenance with no replacement for >5 days
   const { rows: noRepl } = await pool.query(`
     SELECT v.id, v.license_plate, v.brand, v.model, v.hub,
-           COALESCE(MAX(ml.performed_at)::DATE, v.updated_at::DATE) AS since_date,
-           CURRENT_DATE - COALESCE(MAX(ml.performed_at)::DATE, v.updated_at::DATE) AS days_in
+           COALESCE(v.maintenance_since, v.updated_at::DATE) AS since_date,
+           CURRENT_DATE - COALESCE(v.maintenance_since, v.updated_at::DATE) AS days_in
     FROM vehicles v
-    LEFT JOIN maintenance_logs ml ON ml.vehicle_id = v.id
     WHERE v.status = 'in_maintenance' AND v.archived = FALSE
       AND NOT EXISTS (
         SELECT 1 FROM replacement_vehicles r
         WHERE r.vehicle_id = v.id AND r.end_date IS NULL
       )
-    GROUP BY v.id, v.license_plate, v.brand, v.model, v.hub, v.updated_at
-    HAVING CURRENT_DATE - COALESCE(MAX(ml.performed_at)::DATE, v.updated_at::DATE) > 5
+      AND CURRENT_DATE - COALESCE(v.maintenance_since, v.updated_at::DATE) > 5
     ORDER BY days_in DESC
   `);
 
