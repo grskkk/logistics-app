@@ -8,7 +8,7 @@ from datetime import datetime, date
 
 import psycopg2
 
-CSV_PATH = "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet -   VAN.csv"
+CSV_PATH = "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet -   VAN (1).csv"
 DB_URL = "postgresql://giorgoskefalakis@localhost:5432/logistics"
 
 TODAY = date.today()
@@ -216,11 +216,9 @@ def main():
             extra_service = second_last
             extra_workshop = last_col
 
-        # Determine vehicle status
-        active_replacement = repl_is_plate and not return_date
-        in_service_no_repl = (repl_is_service or (not repl_is_plate and extra_workshop and not tire_change))
-
-        if active_replacement or in_service_no_repl:
+        # Determine vehicle status: column I (replacement/service col) drives this.
+        # A license plate or "service" in that column means the vehicle is in maintenance.
+        if repl_is_plate or repl_is_service:
             status = 'in_maintenance'
         else:
             status = 'operational'

@@ -169,73 +169,107 @@ export default function Fleet() {
         </div>
       </div>
 
-      {!showArchived && (
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid #E7E5E4",
-            borderRadius: 12,
-            padding: "14px 16px",
-            marginBottom: 16,
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
-          }}
-        >
-          {(() => {
-            const types = ["van", "truck", "bike", "car"];
-            const typeLabel: Record<string, string> = { van: "Van", truck: "Truck", bike: "Bike", car: "Car" };
-            const hubs = ["Athens", "Alimos", "Menidi", "Mandra", "Paiania"];
+      {!showArchived && (() => {
+        const types = ["van", "truck", "bike", "car"];
+        const typeLabel: Record<string, string> = { van: "Van", truck: "Truck", bike: "Bike", car: "Car" };
+        const hubs = ["Athens", "Alimos", "Menidi", "Mandra", "Paiania"];
 
-            const typeOptions: FilterOption[] = (["all", ...types] as string[]).map((t) => ({
-              value: t,
-              label: t === "all" ? "All Types" : typeLabel[t],
-              count: t === "all" ? vehicles.length : vehicles.filter((v) => v.type === t).length,
-            }));
-            const hubOptions: FilterOption[] = (["all", ...hubs] as string[]).map((hub) => ({
-              value: hub,
-              label: hub === "all" ? "All Hubs" : hub,
-              count: hub === "all" ? vehicles.length : vehicles.filter((v) => v.hub === hub).length,
-            }));
+        const matchesStatus = (v: Vehicle) =>
+          filterStatus === "all" ? true
+          : filterStatus === "in_maintenance_repl" ? v.status === "in_maintenance" && v.hasActiveReplacement
+          : filterStatus === "in_maintenance_no_repl" ? v.status === "in_maintenance" && !v.hasActiveReplacement
+          : v.status === filterStatus;
+        const matchesHub = (v: Vehicle) => filterHub === "all" || v.hub === filterHub;
+        const matchesType = (v: Vehicle) => filterType === "all" || v.type === filterType;
 
-            return (
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        const filteredVehicles = vehicles.filter((v) => matchesStatus(v) && matchesHub(v) && matchesType(v));
+        const filtersActive = filterStatus !== "all" || filterHub !== "all" || filterType !== "all";
+
+        const typeOptions: FilterOption[] = (["all", ...types] as string[]).map((t) => ({
+          value: t,
+          label: t === "all" ? "All Types" : typeLabel[t],
+          count: vehicles.filter((v) => matchesStatus(v) && matchesHub(v) && (t === "all" || v.type === t)).length,
+        }));
+        const hubOptions: FilterOption[] = (["all", ...hubs] as string[]).map((hub) => ({
+          value: hub,
+          label: hub === "all" ? "All Hubs" : hub,
+          count: vehicles.filter((v) => matchesStatus(v) && matchesType(v) && (hub === "all" || v.hub === hub)).length,
+        }));
+        const statusOptions: FilterOption[] = ([
+          ["all", "All", "#57534E"],
+          ["operational", "Operational", "#16A34A"],
+          ["on_route", "On Route", "#D97757"],
+          ["in_maintenance", "In Maintenance", "#CA8A04"],
+          ["in_maintenance_repl", "With Replacement", "#CA8A04"],
+          ["in_maintenance_no_repl", "No Replacement", "#CA8A04"],
+          ["non_operational", "Non Operational", "#DC2626"],
+        ] as [string, string, string][]).map(([val, lbl, color]) => ({
+          value: val,
+          label: lbl,
+          color,
+          indent: val.startsWith("in_maintenance_"),
+          count: vehicles.filter((v) => {
+            if (!matchesHub(v) || !matchesType(v)) return false;
+            if (val === "all") return true;
+            if (val === "in_maintenance_repl") return v.status === "in_maintenance" && v.hasActiveReplacement;
+            if (val === "in_maintenance_no_repl") return v.status === "in_maintenance" && !v.hasActiveReplacement;
+            return v.status === val;
+          }).length,
+        }));
+
+        return (
+          <div
+            style={{
+              background: "#fff",
+              border: `1px solid ${filtersActive ? "#D97757" : "#E7E5E4"}`,
+              borderRadius: 12,
+              padding: "14px 16px",
+              marginBottom: 16,
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+              boxShadow: filtersActive ? "0 1px 3px rgba(217,119,87,0.12)" : "none",
+              transition: "border-color 0.15s, box-shadow 0.15s",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                 <FilterDropdown label="Type" options={typeOptions} value={filterType} onChange={setFilterType} />
                 <FilterDropdown label="Hub" options={hubOptions} value={filterHub} onChange={setFilterHub} />
-              </div>
-            );
-          })()}
-
-          <div style={{ borderTop: "1px solid #F5F5F4" }} />
-
-          {(() => {
-            const statusOptions: FilterOption[] = ([
-              ["all", "All", "#57534E"],
-              ["operational", "Operational", "#16A34A"],
-              ["on_route", "On Route", "#D97757"],
-              ["in_maintenance", "In Maintenance", "#CA8A04"],
-              ["in_maintenance_repl", "With Replacement", "#CA8A04"],
-              ["in_maintenance_no_repl", "No Replacement", "#CA8A04"],
-              ["non_operational", "Non Operational", "#DC2626"],
-            ] as [string, string, string][]).map(([val, lbl, color]) => ({
-              value: val,
-              label: lbl,
-              color,
-              indent: val.startsWith("in_maintenance_"),
-              count:
-                val === "all" ? vehicles.length
-                : val === "in_maintenance_repl" ? vehicles.filter((v) => v.status === "in_maintenance" && v.hasActiveReplacement).length
-                : val === "in_maintenance_no_repl" ? vehicles.filter((v) => v.status === "in_maintenance" && !v.hasActiveReplacement).length
-                : vehicles.filter((v) => v.status === val).length,
-            }));
-            return (
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <FilterDropdown label="Status" options={statusOptions} value={filterStatus} onChange={setFilterStatus} />
+                {filtersActive && (
+                  <button
+                    onClick={() => { setFilterStatus("all"); setFilterHub("all"); setFilterType("all"); }}
+                    style={{
+                      padding: "6px 10px", borderRadius: 8, border: "none", background: "transparent",
+                      color: "#A8A29E", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+                    }}
+                  >
+                    Clear ✕
+                  </button>
+                )}
               </div>
-            );
-          })()}
-        </div>
-      )}
+              <div
+                style={{
+                  display: "flex", alignItems: "baseline", gap: 6,
+                  padding: "5px 12px", borderRadius: 20,
+                  background: filtersActive ? "#FFF7ED" : "#FAF9F7",
+                  border: `1px solid ${filtersActive ? "#FED7AA" : "#E7E5E4"}`,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <span style={{ fontSize: 16, fontWeight: 800, color: filtersActive ? "#C2410C" : "#1C1917" }}>
+                  {filteredVehicles.length}
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#78716C" }}>
+                  {filteredVehicles.length === 1 ? "vehicle" : "vehicles"}
+                  {filtersActive && <> matching filters</>}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="table-wrapper">
       <table>
