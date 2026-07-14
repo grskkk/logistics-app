@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { FleetNotification } from "@logistics/shared";
 import { api } from "../api/client";
 
@@ -14,18 +15,54 @@ const typeIcon: Record<string, string> = {
   non_operational: "🔴",
 };
 
+const DISMISSED_KEY = "logitrack_dismissed_notifications";
+
+function loadDismissed(): Set<string> {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(DISMISSED_KEY) ?? "[]"));
+  } catch {
+    return new Set();
+  }
+}
+
 export default function NotificationPanel() {
   const [open, setOpen] = useState(false);
-  const [notes, setNotes] = useState<FleetNotification[]>([]);
+  const [allNotes, setAllNotes] = useState<FleetNotification[]>([]);
+  const [dismissed, setDismissed] = useState<Set<string>>(loadDismissed);
   const panelRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    api.get<FleetNotification[]>("/notifications").then(setNotes).catch(console.error);
+    api.get<FleetNotification[]>("/notifications").then(setAllNotes).catch(console.error);
     const id = setInterval(() => {
-      api.get<FleetNotification[]>("/notifications").then(setNotes).catch(console.error);
+      api.get<FleetNotification[]>("/notifications").then(setAllNotes).catch(console.error);
     }, 60_000);
     return () => clearInterval(id);
   }, []);
+
+  const notes = allNotes.filter((n) => !dismissed.has(n.id));
+
+  const dismiss = (id: string) => {
+    setDismissed((prev) => {
+      const next = new Set(prev).add(id);
+      localStorage.setItem(DISMISSED_KEY, JSON.stringify([...next]));
+      return next;
+    });
+  };
+
+  const dismissAll = () => {
+    setDismissed((prev) => {
+      const next = new Set(prev);
+      for (const n of notes) next.add(n.id);
+      localStorage.setItem(DISMISSED_KEY, JSON.stringify([...next]));
+      return next;
+    });
+  };
+
+  const openVehicle = (n: FleetNotification) => {
+    setOpen(false);
+    navigate(`/fleet?plate=${encodeURIComponent(n.licensePlate)}`);
+  };
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -78,13 +115,23 @@ export default function NotificationPanel() {
         }}>
           <div style={{
             padding: "14px 18px", borderBottom: "1px solid #F5F5F4",
-            display: "flex", justifyContent: "space-between", alignItems: "center",
+            display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8,
           }}>
             <span style={{ fontWeight: 700, fontSize: 15 }}>Fleet Alerts</span>
-            <span style={{ fontSize: 12, color: "#A8A29E" }}>
-              {high > 0 && <span style={{ color: "#DC2626", fontWeight: 700 }}>{high} urgent · </span>}
-              {count} total
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 12, color: "#A8A29E" }}>
+                {high > 0 && <span style={{ color: "#DC2626", fontWeight: 700 }}>{high} urgent · </span>}
+                {count} total
+              </span>
+              {count > 0 && (
+                <button
+                  onClick={dismissAll}
+                  style={{ background: "none", border: "none", color: "#A8A29E", fontWeight: 700, fontSize: 11, cursor: "pointer", fontFamily: "inherit", padding: 0 }}
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
           </div>
 
           <div style={{ overflowY: "auto", flex: 1 }}>
@@ -102,10 +149,17 @@ export default function NotificationPanel() {
                     {sev === "high" ? "Urgent" : sev === "medium" ? "Warning" : "Info"}
                   </div>
                   {group.map((n) => (
-                    <div key={n.id} style={{
-                      padding: "12px 18px", borderBottom: "1px solid #F5F5F4",
-                      display: "flex", gap: 10, alignItems: "flex-start",
-                    }}>
+                    <div
+                      key={n.id}
+                      onClick={() => openVehicle(n)}
+                      style={{
+                        padding: "12px 18px", borderBottom: "1px solid #F5F5F4",
+                        display: "flex", gap: 10, alignItems: "flex-start",
+                        cursor: "pointer",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#FAF9F7")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    >
                       <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{typeIcon[n.type]}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontWeight: 600, fontSize: 13, color: "#1C1917" }}>{n.title}</div>
@@ -114,6 +168,16 @@ export default function NotificationPanel() {
                           <div style={{ fontSize: 11, color: "#A8A29E", marginTop: 4 }}>Hub: {n.hub}</div>
                         )}
                       </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); dismiss(n.id); }}
+                        title="Dismiss"
+                        style={{
+                          background: "none", border: "none", color: "#D6D3D1", fontSize: 14,
+                          cursor: "pointer", padding: 2, flexShrink: 0, lineHeight: 1,
+                        }}
+                      >
+                        ✕
+                      </button>
                     </div>
                   ))}
                 </div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import type { Vehicle } from "@logistics/shared";
 import { api } from "../api/client";
 import MaintenanceDrawer from "../components/MaintenanceDrawer";
@@ -118,6 +119,8 @@ export default function Fleet() {
   const [filterHub, setFilterHub] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
   const [showArchived, setShowArchived] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const plateFilter = searchParams.get("plate");
 
   const load = (archived = showArchived) => {
     api.get<Vehicle[]>(`/vehicles?archived=${archived}`).then(setVehicles).catch(console.error);
@@ -166,7 +169,25 @@ export default function Fleet() {
         </div>
       </div>
 
-      {!showArchived && (() => {
+      {!showArchived && plateFilter && (
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+          background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 12,
+          padding: "10px 16px", marginBottom: 16,
+        }}>
+          <span style={{ fontSize: 13, color: "#C2410C" }}>
+            Filtered from an alert — showing <strong>{plateFilter}</strong>
+          </span>
+          <button
+            onClick={() => setSearchParams({})}
+            style={{ padding: "6px 10px", borderRadius: 8, border: "none", background: "transparent", color: "#C2410C", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+          >
+            Clear ✕
+          </button>
+        </div>
+      )}
+
+      {!showArchived && !plateFilter && (() => {
         const types = ["van", "truck", "bike", "car"];
         const typeLabel: Record<string, string> = { van: "Van", truck: "Truck", bike: "Bike", car: "Car" };
         const hubs = ["Athens", "Alimos", "Menidi", "Mandra", "Paiania"];
@@ -294,14 +315,14 @@ export default function Fleet() {
             <tr><td colSpan={5} style={{ padding: 24, textAlign: "center", color: "#94a3b8" }}>No vehicles yet.</td></tr>
           )}
           {[...vehicles]
-            .filter((v) =>
-              filterStatus === "all" ? true
+            .filter((v) => !plateFilter || v.licensePlate === plateFilter)
+            .filter((v) => plateFilter || filterStatus === "all" ? true
               : filterStatus === "in_maintenance_repl" ? v.status === "in_maintenance" && v.hasActiveReplacement
               : filterStatus === "in_maintenance_no_repl" ? v.status === "in_maintenance" && !v.hasActiveReplacement
               : v.status === filterStatus
             )
-            .filter((v) => filterHub === "all" || v.hub === filterHub)
-            .filter((v) => filterType === "all" || v.type === filterType)
+            .filter((v) => plateFilter || filterHub === "all" || v.hub === filterHub)
+            .filter((v) => plateFilter || filterType === "all" || v.type === filterType)
             .sort((a, b) => sortAZ ? a.licensePlate.localeCompare(b.licensePlate) : a.id - b.id)
             .map((v) => (
             <tr key={v.id} style={{ borderTop: "1px solid #F5F5F4" }}>
