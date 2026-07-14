@@ -115,8 +115,6 @@ export default function VehicleEditDrawer({ vehicle, onClose, onSaved }: Props) 
               <label style={label}>Vehicle Type</label>
               <select value={type} onChange={(e) => setType(e.target.value as typeof type)} style={input}>
                 <option value="van">Van</option>
-                <option value="truck">Truck</option>
-                <option value="bike">Bike</option>
                 <option value="car">Car</option>
               </select>
             </div>

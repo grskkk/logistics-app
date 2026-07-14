@@ -28,8 +28,6 @@ export default function Dashboard() {
 
   const vByType = {
     van: vehicles.filter((v) => v.type === "van").length,
-    truck: vehicles.filter((v) => v.type === "truck").length,
-    bike: vehicles.filter((v) => v.type === "bike").length,
   };
 
   const maintenanceVehicles = vehicles.filter((v) => v.status === "in_maintenance");
@@ -59,7 +57,7 @@ export default function Dashboard() {
       {/* By type */}
       <div style={{ maxWidth: 320, background: "#fff", borderRadius: 10, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,.06)", marginBottom: 32 }}>
         <div style={sectionTitle}>By Type</div>
-        {[["Van", vByType.van, "#D97757"], ["Truck", vByType.truck, "#1C1917"], ["Bike", vByType.bike, "#CA8A04"]].map(([label, count, color]) => (
+        {[["Van", vByType.van, "#D97757"]].map(([label, count, color]) => (
           <div key={label as string} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #F5F5F4" }}>
             <span style={{ fontWeight: 700, color: "#1C1917" }}>{label as string}</span>
             <span style={{ fontWeight: 800, fontSize: 18, color: color as string }}>{count as number}</span>

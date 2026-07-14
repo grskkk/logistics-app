@@ -16,7 +16,7 @@ interface Props {
 
 export default function AddVehicleModal({ onClose, onAdded }: Props) {
   const [licensePlate, setLicensePlate] = useState("");
-  const [type, setType] = useState<"van" | "truck" | "bike" | "car">("van");
+  const [type, setType] = useState<"van" | "car">("van");
   const [status, setStatus] = useState<VehicleStatus>("operational");
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
@@ -112,8 +112,6 @@ export default function AddVehicleModal({ onClose, onAdded }: Props) {
               <label style={label}>Vehicle Type</label>
               <select value={type} onChange={(e) => setType(e.target.value as typeof type)} style={input}>
                 <option value="van">Van</option>
-                <option value="truck">Truck</option>
-                <option value="bike">Bike</option>
                 <option value="car">Car</option>
               </select>
             </div>

@@ -188,8 +188,8 @@ export default function Fleet() {
       )}
 
       {!showArchived && !plateFilter && (() => {
-        const types = ["van", "truck", "bike", "car"];
-        const typeLabel: Record<string, string> = { van: "Van", truck: "Truck", bike: "Bike", car: "Car" };
+        const types = ["van", "car"];
+        const typeLabel: Record<string, string> = { van: "Van", car: "Car" };
         const hubs = ["Athens", "Alimos", "Menidi", "Mandra", "Paiania"];
 
         const matchesStatus = (v: Vehicle) =>

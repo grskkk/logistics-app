@@ -21,7 +21,7 @@ export interface Driver {
 export interface Vehicle {
   id: number;
   licensePlate: string;
-  type: "van" | "truck" | "bike" | "car";
+  type: "van" | "car";
   status: VehicleStatus;
   brand: string | null;
   model: string | null;

@@ -141,8 +141,6 @@ export default function ReplacementVehicleModal({ vehicle, onClose }: Props) {
                   <label style={label}>Type</label>
                   <select value={type} onChange={(e) => setType(e.target.value)} style={input}>
                     <option value="van">Van</option>
-                    <option value="truck">Truck</option>
-                    <option value="bike">Bike</option>
                   </select>
                 </div>
               </div>
