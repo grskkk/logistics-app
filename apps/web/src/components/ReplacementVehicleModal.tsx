@@ -105,7 +105,7 @@ export default function ReplacementVehicleModal({ vehicle, onClose }: Props) {
                   {(active.brand || active.model) && <span style={{ color: "#78716C", fontSize: 13 }}>{active.brand} {active.model}</span>}
                   {active.leaseCompany && <span style={{ color: "#78716C", fontSize: 13 }}>From: {active.leaseCompany}</span>}
                   <span style={{ color: "#A8A29E", fontSize: 12 }}>
-                    Since {new Date(active.startDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                    Since {new Date(active.startDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}
                   </span>
                   {active.notes && <span style={{ color: "#78716C", fontSize: 13, marginTop: 4 }}>{active.notes}</span>}
                 </div>
@@ -188,8 +188,8 @@ export default function ReplacementVehicleModal({ vehicle, onClose }: Props) {
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <span style={{ fontWeight: 700, color: "#1C1917" }}>{r.licensePlate}</span>
                       <span style={{ fontSize: 12, color: "#A8A29E" }}>
-                        {new Date(r.startDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} →{" "}
-                        {new Date(r.endDate!).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                        {new Date(r.startDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" })} →{" "}
+                        {new Date(r.endDate!).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}
                       </span>
                     </div>
                     {(r.brand || r.model) && <div style={{ fontSize: 13, color: "#78716C" }}>{r.brand} {r.model}</div>}

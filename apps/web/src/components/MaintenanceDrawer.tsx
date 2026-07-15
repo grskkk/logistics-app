@@ -1,6 +1,34 @@
 import { useEffect, useState } from "react";
-import type { MaintenanceLog, Vehicle } from "@logistics/shared";
+import type { MaintenanceLog, MaintenancePeriod, Vehicle } from "@logistics/shared";
 import { api } from "../api/client";
+
+const fmtDate = (d: string) =>
+  new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+
+function periodDuration(period: MaintenancePeriod): number {
+  const start = new Date(period.startDate).getTime();
+  const end = period.endDate ? new Date(period.endDate).getTime() : Date.now();
+  return Math.max(1, Math.round((end - start) / 86400000));
+}
+
+function groupLogsByPeriod(logs: MaintenanceLog[], periods: MaintenancePeriod[]) {
+  const sortedPeriods = [...periods].sort(
+    (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+  );
+  const claimed = new Set<number>();
+  const groups = sortedPeriods.map((period) => {
+    const start = new Date(period.startDate).getTime();
+    const end = period.endDate ? new Date(period.endDate).getTime() : Infinity;
+    const periodLogs = logs.filter((log) => {
+      const t = new Date(log.performedAt).getTime();
+      return t >= start && t <= end;
+    });
+    periodLogs.forEach((log) => claimed.add(log.id));
+    return { period, logs: periodLogs };
+  });
+  const other = logs.filter((log) => !claimed.has(log.id));
+  return { groups, other };
+}
 
 const SERVICE_TYPES = [
   "Oil Change",
@@ -23,16 +51,20 @@ interface Props {
 
 export default function MaintenanceDrawer({ vehicle, onClose }: Props) {
   const [logs, setLogs] = useState<MaintenanceLog[]>([]);
+  const [periods, setPeriods] = useState<MaintenancePeriod[]>([]);
   const [workshops, setWorkshops] = useState<string[]>([]);
   const [serviceType, setServiceType] = useState(SERVICE_TYPES[0]);
   const [notes, setNotes] = useState("");
   const [performedAt, setPerformedAt] = useState(new Date().toISOString().slice(0, 10));
+  const [returnedAt, setReturnedAt] = useState("");
   const [workshop, setWorkshop] = useState("");
   const [kmAtService, setKmAtService] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const load = () =>
+  const load = () => {
     api.get<MaintenanceLog[]>(`/maintenance/${vehicle.id}`).then(setLogs).catch(console.error);
+    api.get<MaintenancePeriod[]>(`/maintenance/${vehicle.id}/periods`).then(setPeriods).catch(console.error);
+  };
 
   useEffect(() => { load(); }, [vehicle.id]);
   useEffect(() => {
@@ -45,11 +77,13 @@ export default function MaintenanceDrawer({ vehicle, onClose }: Props) {
     try {
       await api.post(`/maintenance/${vehicle.id}`, {
         serviceType, notes: notes || null, performedAt,
+        returnedAt: returnedAt || null,
         workshop: workshop || null,
         kmAtService: kmAtService ? parseInt(kmAtService) : null,
       });
       setNotes(""); setServiceType(SERVICE_TYPES[0]);
       setPerformedAt(new Date().toISOString().slice(0, 10));
+      setReturnedAt("");
       setWorkshop(""); setKmAtService("");
       await load();
     } finally {
@@ -88,11 +122,20 @@ export default function MaintenanceDrawer({ vehicle, onClose }: Props) {
               </select>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Date</label>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Date in</label>
               <input
                 type="date"
                 value={performedAt}
                 onChange={(e) => setPerformedAt(e.target.value)}
+                style={{ padding: "7px 10px", borderRadius: 6, border: "1px solid #cbd5e1", fontSize: 13 }}
+              />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>Date out (optional)</label>
+              <input
+                type="date"
+                value={returnedAt}
+                onChange={(e) => setReturnedAt(e.target.value)}
                 style={{ padding: "7px 10px", borderRadius: 6, border: "1px solid #cbd5e1", fontSize: 13 }}
               />
             </div>
@@ -140,23 +183,66 @@ export default function MaintenanceDrawer({ vehicle, onClose }: Props) {
           {logs.length === 0 && (
             <div style={{ color: "#94a3b8", fontSize: 14, textAlign: "center", marginTop: 32 }}>No maintenance records yet.</div>
           )}
-          {logs.map((log) => (
-            <div key={log.id} style={{ borderLeft: "3px solid #D97757", paddingLeft: 14, marginBottom: 18 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontWeight: 700, fontSize: 14, color: "#1C1917" }}>{log.serviceType}</span>
-                <span style={{ fontSize: 12, color: "#94a3b8" }}>
-                  {new Date(log.performedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                </span>
-              </div>
-              {(log.workshop || log.kmAtService) && (
-                <div style={{ fontSize: 12, color: "#78716C", marginTop: 3, display: "flex", gap: 12 }}>
-                  {log.workshop && <span>📍 {log.workshop}</span>}
-                  {log.kmAtService && <span>⟳ {log.kmAtService.toLocaleString()} km</span>}
+
+          {(() => {
+            const { groups, other } = groupLogsByPeriod(logs, periods);
+            const renderLog = (log: MaintenanceLog) => (
+              <div key={log.id} style={{ borderLeft: "3px solid #D97757", paddingLeft: 14, marginBottom: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: "#1C1917" }}>{log.serviceType}</span>
+                  <span style={{ fontSize: 12, color: "#94a3b8" }}>
+                    {log.returnedAt ? `${fmtDate(log.performedAt)} → ${fmtDate(log.returnedAt)}` : fmtDate(log.performedAt)}
+                  </span>
                 </div>
-              )}
-              {log.notes && <div style={{ fontSize: 13, color: "#475569", marginTop: 4 }}>{log.notes}</div>}
-            </div>
-          ))}
+                {(log.workshop || log.kmAtService) && (
+                  <div style={{ fontSize: 12, color: "#78716C", marginTop: 3, display: "flex", gap: 12 }}>
+                    {log.workshop && <span>📍 {log.workshop}</span>}
+                    {log.kmAtService && <span>⟳ {log.kmAtService.toLocaleString()} km</span>}
+                  </div>
+                )}
+                {log.notes && <div style={{ fontSize: 13, color: "#475569", marginTop: 4 }}>{log.notes}</div>}
+              </div>
+            );
+
+            return (
+              <>
+                {groups.map(({ period, logs: periodLogs }) => (
+                  <div key={period.id} style={{ marginBottom: 22 }}>
+                    <div
+                      style={{
+                        display: "flex", alignItems: "center", gap: 8, marginBottom: 10,
+                        background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 8,
+                        padding: "8px 12px",
+                      }}
+                    >
+                      <span style={{ fontSize: 13 }}>🔧</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "#C2410C" }}>
+                        In maintenance {fmtDate(period.startDate)} → {period.endDate ? fmtDate(period.endDate) : "Ongoing"}
+                      </span>
+                      <span style={{ fontSize: 12, color: "#C2410C", opacity: 0.7 }}>
+                        ({periodDuration(period)} {periodDuration(period) === 1 ? "day" : "days"})
+                      </span>
+                    </div>
+                    {periodLogs.length > 0 ? (
+                      <div style={{ paddingLeft: 4 }}>{periodLogs.map(renderLog)}</div>
+                    ) : (
+                      <div style={{ fontSize: 13, color: "#A8A29E", paddingLeft: 18, marginBottom: 4 }}>No work logged for this period.</div>
+                    )}
+                  </div>
+                ))}
+                {other.length > 0 && (
+                  <div>
+                    {groups.length > 0 && (
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "#A8A29E", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>
+                        Other Records
+                      </div>
+                    )}
+                    {other.map(renderLog)}
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
       </div>
     </>

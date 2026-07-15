@@ -1,7 +1,12 @@
-import { Pool } from "pg";
+import { Pool, types } from "pg";
 import dotenv from "dotenv";
 
 dotenv.config();
+
+// Return DATE columns as raw "YYYY-MM-DD" strings instead of JS Date objects.
+// pg otherwise parses them at local-timezone midnight, which then shifts by a
+// day (or more, depending on DST) once serialized back out as UTC ISO strings.
+types.setTypeParser(types.builtins.DATE, (val) => val);
 
 const isLocalDb = /localhost|127\.0\.0\.1/.test(process.env.DATABASE_URL ?? "");
 
@@ -46,6 +51,7 @@ export async function initDb(): Promise<void> {
 
     ALTER TABLE maintenance_logs ADD COLUMN IF NOT EXISTS workshop TEXT;
     ALTER TABLE maintenance_logs ADD COLUMN IF NOT EXISTS km_at_service INTEGER;
+    ALTER TABLE maintenance_logs ADD COLUMN IF NOT EXISTS returned_at DATE;
 
     CREATE TABLE IF NOT EXISTS replacement_vehicles (
       id SERIAL PRIMARY KEY,
@@ -69,6 +75,22 @@ export async function initDb(): Promise<void> {
       performed_at DATE NOT NULL,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS maintenance_periods (
+      id SERIAL PRIMARY KEY,
+      vehicle_id INT NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
+      start_date DATE NOT NULL,
+      end_date DATE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    INSERT INTO maintenance_periods (vehicle_id, start_date)
+    SELECT v.id, COALESCE(v.maintenance_since, CURRENT_DATE)
+    FROM vehicles v
+    WHERE v.status = 'in_maintenance'
+      AND NOT EXISTS (
+        SELECT 1 FROM maintenance_periods p WHERE p.vehicle_id = v.id AND p.end_date IS NULL
+      );
 
     CREATE TABLE IF NOT EXISTS shipments (
       id SERIAL PRIMARY KEY,

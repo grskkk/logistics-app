@@ -10,8 +10,19 @@ function mapLog(row: Record<string, unknown>) {
     serviceType: row.service_type,
     notes: row.notes,
     performedAt: row.performed_at,
+    returnedAt: row.returned_at,
     workshop: row.workshop,
     kmAtService: row.km_at_service,
+    createdAt: row.created_at,
+  };
+}
+
+function mapPeriod(row: Record<string, unknown>) {
+  return {
+    id: row.id,
+    vehicleId: row.vehicle_id,
+    startDate: row.start_date,
+    endDate: row.end_date,
     createdAt: row.created_at,
   };
 }
@@ -33,12 +44,20 @@ router.get("/:vehicleId", async (req, res) => {
   res.json(rows.map(mapLog));
 });
 
-router.post("/:vehicleId", async (req, res) => {
-  const { serviceType, notes, performedAt, workshop, kmAtService } = req.body;
+router.get("/:vehicleId/periods", async (req, res) => {
   const { rows } = await pool.query(
-    `INSERT INTO maintenance_logs (vehicle_id, service_type, notes, performed_at, workshop, km_at_service)
-     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-    [req.params.vehicleId, serviceType, notes ?? null, performedAt, workshop ?? null, kmAtService ?? null]
+    "SELECT * FROM maintenance_periods WHERE vehicle_id = $1 ORDER BY start_date DESC",
+    [req.params.vehicleId]
+  );
+  res.json(rows.map(mapPeriod));
+});
+
+router.post("/:vehicleId", async (req, res) => {
+  const { serviceType, notes, performedAt, returnedAt, workshop, kmAtService } = req.body;
+  const { rows } = await pool.query(
+    `INSERT INTO maintenance_logs (vehicle_id, service_type, notes, performed_at, returned_at, workshop, km_at_service)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+    [req.params.vehicleId, serviceType, notes ?? null, performedAt, returnedAt ?? null, workshop ?? null, kmAtService ?? null]
   );
   res.status(201).json(mapLog(rows[0]));
 });

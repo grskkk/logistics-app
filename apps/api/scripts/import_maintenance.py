@@ -77,6 +77,7 @@ inserted = 0
 skipped_no_vehicle = 0
 skipped_no_date = 0
 skipped_duplicate = 0
+backfilled_returned = 0
 
 with open(CSV_PATH, encoding='utf-8-sig') as f:
     reader = csv.reader(f)
@@ -106,6 +107,7 @@ with open(CSV_PATH, encoding='utf-8-sig') as f:
         for i in range(6, end_col - 4, 6):
             date_in_raw  = row[i].strip()     if i   < end_col else ""
             kms_raw      = row[i+1].strip()   if i+1 < end_col else ""
+            date_out_raw = row[i+2].strip()   if i+2 < end_col else ""
             workshop_raw = row[i+3].strip()   if i+3 < end_col else ""
             repair_raw   = row[i+4].strip()   if i+4 < end_col else ""
             notes_raw    = row[i+5].strip()   if i+5 < end_col else ""
@@ -118,27 +120,37 @@ with open(CSV_PATH, encoding='utf-8-sig') as f:
                 skipped_no_date += 1
                 continue
 
+            returned_at = parse_date(date_out_raw)
             km_val = parse_km(kms_raw)
             service_type = REPAIR_MAP.get(repair_raw, repair_raw)
             workshop = workshop_raw or None
             notes = notes_raw or None
 
-            # Skip duplicates
+            # Existing record? Backfill its "date out" if we now have one, otherwise skip.
             cur.execute("""
-                SELECT 1 FROM maintenance_logs
+                SELECT id, returned_at FROM maintenance_logs
                 WHERE vehicle_id = %s
                   AND performed_at::date = %s
                   AND service_type = %s
             """, (vehicle_id, performed_at, service_type))
-            if cur.fetchone():
-                skipped_duplicate += 1
+            existing = cur.fetchone()
+            if existing:
+                log_id, existing_returned = existing
+                if returned_at and not existing_returned:
+                    cur.execute(
+                        "UPDATE maintenance_logs SET returned_at = %s WHERE id = %s",
+                        (returned_at, log_id)
+                    )
+                    backfilled_returned += 1
+                else:
+                    skipped_duplicate += 1
                 continue
 
             cur.execute("""
                 INSERT INTO maintenance_logs
-                    (vehicle_id, service_type, notes, performed_at, workshop, km_at_service)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (vehicle_id, service_type, notes, performed_at, workshop, km_val))
+                    (vehicle_id, service_type, notes, performed_at, returned_at, workshop, km_at_service)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (vehicle_id, service_type, notes, performed_at, returned_at, workshop, km_val))
             inserted += 1
 
 conn.commit()
@@ -146,6 +158,7 @@ cur.close()
 conn.close()
 
 print(f"Inserted:               {inserted}")
+print(f"Backfilled 'date out':  {backfilled_returned}")
 print(f"Skipped (no vehicle):   {skipped_no_vehicle}")
 print(f"Skipped (no date):      {skipped_no_date}")
 print(f"Skipped (duplicates):   {skipped_duplicate}")

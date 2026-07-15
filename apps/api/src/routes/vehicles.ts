@@ -64,11 +64,23 @@ router.post("/", async (req, res) => {
       initialStatus === "non_operational" ? nonOperationalReason ?? null : null,
     ]
   );
+  if (initialStatus === "in_maintenance") {
+    await pool.query(
+      "INSERT INTO maintenance_periods (vehicle_id, start_date) VALUES ($1, $2)",
+      [rows[0].id, rows[0].maintenance_since]
+    );
+  }
   res.status(201).json(mapVehicle(rows[0]));
 });
 
 router.put("/:id", async (req, res) => {
   const { licensePlate, type, status, brand, model, driverId, location, fuelType, capacityLiters, leaseStartDate, leaseCompany, hub, archived, nonOperationalBy, nonOperationalReason } = req.body;
+
+  const { rows: existingRows } = await pool.query("SELECT status FROM vehicles WHERE id = $1", [req.params.id]);
+  if (!existingRows[0]) return res.status(404).json({ error: "Vehicle not found" });
+  const prevStatus = existingRows[0].status;
+  const newStatus = status ?? prevStatus;
+
   const { rows } = await pool.query(
     `UPDATE vehicles SET
      license_plate = COALESCE($1, license_plate),
@@ -119,6 +131,19 @@ router.put("/:id", async (req, res) => {
     ]
   );
   if (!rows[0]) return res.status(404).json({ error: "Vehicle not found" });
+
+  if (newStatus === "in_maintenance" && prevStatus !== "in_maintenance") {
+    await pool.query(
+      "INSERT INTO maintenance_periods (vehicle_id, start_date) VALUES ($1, COALESCE($2, CURRENT_DATE))",
+      [req.params.id, rows[0].maintenance_since]
+    );
+  } else if (newStatus !== "in_maintenance" && prevStatus === "in_maintenance") {
+    await pool.query(
+      "UPDATE maintenance_periods SET end_date = CURRENT_DATE WHERE vehicle_id = $1 AND end_date IS NULL",
+      [req.params.id]
+    );
+  }
+
   res.json(mapVehicle(rows[0]));
 });
 

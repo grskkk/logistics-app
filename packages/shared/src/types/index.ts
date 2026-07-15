@@ -53,12 +53,21 @@ export interface ReplacementVehicle {
   createdAt: string;
 }
 
+export interface MaintenancePeriod {
+  id: number;
+  vehicleId: number;
+  startDate: string;
+  endDate: string | null;
+  createdAt: string;
+}
+
 export interface MaintenanceLog {
   id: number;
   vehicleId: number;
   serviceType: string;
   notes: string | null;
   performedAt: string;
+  returnedAt: string | null;
   workshop: string | null;
   kmAtService: number | null;
   createdAt: string;

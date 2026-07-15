@@ -29,7 +29,7 @@ router.get("/", async (_req, res) => {
       vehicleId: r.id,
       licensePlate: r.license_plate,
       title: `No replacement for ${r.days_in} days — ${r.license_plate}`,
-      body: `${[r.brand, r.model].filter(Boolean).join(" ")} has been in maintenance since ${new Date(r.since_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} with no replacement assigned.`,
+      body: `${[r.brand, r.model].filter(Boolean).join(" ")} has been in maintenance since ${new Date(r.since_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" })} with no replacement assigned.`,
       hub: r.hub,
       daysIn: r.days_in,
     });
