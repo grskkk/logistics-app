@@ -27,11 +27,17 @@ export default function VehicleEditDrawer({ vehicle, onClose, onSaved }: Props) 
   );
   const [leaseCompany, setLeaseCompany] = useState(vehicle.leaseCompany ?? "");
   const [hub, setHub] = useState(vehicle.hub ?? "");
+  const [nonOperationalBy, setNonOperationalBy] = useState(vehicle.nonOperationalBy ?? "");
+  const [nonOperationalReason, setNonOperationalReason] = useState(vehicle.nonOperationalReason ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (status === "non_operational" && (!nonOperationalBy.trim() || !nonOperationalReason.trim())) {
+      setError("Please enter who is marking this vehicle non-operational and why.");
+      return;
+    }
     setSubmitting(true);
     setError("");
     try {
@@ -46,6 +52,8 @@ export default function VehicleEditDrawer({ vehicle, onClose, onSaved }: Props) 
         leaseStartDate: leaseStartDate || null,
         leaseCompany: leaseCompany || null,
         hub: hub || null,
+        nonOperationalBy: status === "non_operational" ? nonOperationalBy.trim() : null,
+        nonOperationalReason: status === "non_operational" ? nonOperationalReason.trim() : null,
       });
       onSaved(updated);
       onClose();
@@ -126,6 +134,30 @@ export default function VehicleEditDrawer({ vehicle, onClose, onSaved }: Props) 
               </select>
             </div>
           </div>
+
+          {status === "non_operational" && (
+            <>
+              <div style={field}>
+                <label style={label}>Marked non-operational by</label>
+                <input
+                  value={nonOperationalBy}
+                  onChange={(e) => setNonOperationalBy(e.target.value)}
+                  placeholder="e.g. Giorgos"
+                  style={input}
+                />
+              </div>
+              <div style={field}>
+                <label style={label}>Reason</label>
+                <textarea
+                  value={nonOperationalReason}
+                  onChange={(e) => setNonOperationalReason(e.target.value)}
+                  placeholder="e.g. Won't start, accident damage, flat tire..."
+                  rows={3}
+                  style={{ ...input, resize: "vertical" }}
+                />
+              </div>
+            </>
+          )}
 
           <div style={field}>
             <label style={label}>Fuel Type</label>

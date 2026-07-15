@@ -34,6 +34,8 @@ export interface Vehicle {
   hasActiveReplacement: boolean;
   driverId: number | null;
   location: Location | null;
+  nonOperationalBy: string | null;
+  nonOperationalReason: string | null;
   updatedAt: string;
 }
 

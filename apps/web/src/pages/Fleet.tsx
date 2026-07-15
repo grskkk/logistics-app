@@ -6,6 +6,7 @@ import MaintenanceDrawer from "../components/MaintenanceDrawer";
 import VehicleEditDrawer from "../components/VehicleEditDrawer";
 import AddVehicleModal from "../components/AddVehicleModal";
 import ReplacementVehicleModal from "../components/ReplacementVehicleModal";
+import MarkNonOperationalModal from "../components/MarkNonOperationalModal";
 
 const statusColor: Record<string, string> = {
   operational: "#16A34A",
@@ -112,13 +113,27 @@ export default function Fleet() {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [replacementVehicle, setReplacementVehicle] = useState<Vehicle | null>(null);
-  const [sortAZ, setSortAZ] = useState(false);
+  const [nonOpVehicle, setNonOpVehicle] = useState<Vehicle | null>(null);
+  const [hoveredReasonId, setHoveredReasonId] = useState<number | null>(null);
+  const [sortField, setSortField] = useState<"id" | "plate" | "flaggedBy">("id");
+  const [sortAsc, setSortAsc] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterHub, setFilterHub] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
+  const [filterFlaggedBy, setFilterFlaggedBy] = useState<string>("all");
   const [showArchived, setShowArchived] = useState(false);
+  const [search, setSearch] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
   const plateFilter = searchParams.get("plate");
+  const matchesSearch = (v: Vehicle) =>
+    !search.trim() || v.licensePlate.toLowerCase().includes(search.trim().toLowerCase());
+  const matchesFlaggedBy = (v: Vehicle) =>
+    filterFlaggedBy === "all" || v.nonOperationalBy === filterFlaggedBy;
+
+  const handleSort = (field: "id" | "plate" | "flaggedBy") => {
+    if (sortField === field) setSortAsc((v) => !v);
+    else { setSortField(field); setSortAsc(true); }
+  };
 
   const load = (archived = showArchived) => {
     api.get<Vehicle[]>(`/vehicles?archived=${archived}`).then(setVehicles).catch(console.error);
@@ -145,11 +160,23 @@ export default function Fleet() {
   return (
     <div className="page">
       <div className="page-header">
-        <div>
+        <div style={{ flex: 1 }}>
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: "#1C1917" }}>{showArchived ? "Archived Vehicles" : "Fleet"}</h1>
           <p style={{ margin: "4px 0 0", color: "#78716C", fontSize: 14 }}>{showArchived ? "Restore or review archived vehicles" : "Manage your vehicle fleet"}</p>
         </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search license plate…"
+            style={{
+              padding: "8px 14px", borderRadius: 8, border: "1px solid #D6D3D1",
+              fontSize: 13, fontFamily: "inherit", width: 240, color: "#1C1917",
+            }}
+          />
+        </div>
+        <div style={{ flex: 1, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", justifyContent: "flex-end" }}>
           <button
             onClick={() => setShowArchived((v) => !v)}
             style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid #D6D3D1", background: showArchived ? "#1C1917" : "#fff", color: showArchived ? "#fff" : "#57534E", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
@@ -198,18 +225,18 @@ export default function Fleet() {
         const matchesHub = (v: Vehicle) => filterHub === "all" || v.hub === filterHub;
         const matchesType = (v: Vehicle) => filterType === "all" || v.type === filterType;
 
-        const filteredVehicles = vehicles.filter((v) => matchesStatus(v) && matchesHub(v) && matchesType(v));
-        const filtersActive = filterStatus !== "all" || filterHub !== "all" || filterType !== "all";
+        const filteredVehicles = vehicles.filter((v) => matchesStatus(v) && matchesHub(v) && matchesType(v) && matchesSearch(v) && matchesFlaggedBy(v));
+        const filtersActive = filterStatus !== "all" || filterHub !== "all" || filterType !== "all" || filterFlaggedBy !== "all" || search.trim() !== "";
 
         const typeOptions: FilterOption[] = (["all", ...types] as string[]).map((t) => ({
           value: t,
           label: t === "all" ? "All Types" : typeLabel[t],
-          count: vehicles.filter((v) => matchesStatus(v) && matchesHub(v) && (t === "all" || v.type === t)).length,
+          count: vehicles.filter((v) => matchesStatus(v) && matchesHub(v) && matchesSearch(v) && matchesFlaggedBy(v) && (t === "all" || v.type === t)).length,
         }));
         const hubOptions: FilterOption[] = (["all", ...hubs] as string[]).map((hub) => ({
           value: hub,
           label: hub === "all" ? "All Hubs" : hub,
-          count: vehicles.filter((v) => matchesStatus(v) && matchesType(v) && (hub === "all" || v.hub === hub)).length,
+          count: vehicles.filter((v) => matchesStatus(v) && matchesType(v) && matchesSearch(v) && matchesFlaggedBy(v) && (hub === "all" || v.hub === hub)).length,
         }));
         const statusOptions: FilterOption[] = ([
           ["all", "All", "#57534E"],
@@ -224,12 +251,19 @@ export default function Fleet() {
           color,
           indent: val.startsWith("in_maintenance_"),
           count: vehicles.filter((v) => {
-            if (!matchesHub(v) || !matchesType(v)) return false;
+            if (!matchesHub(v) || !matchesType(v) || !matchesSearch(v) || !matchesFlaggedBy(v)) return false;
             if (val === "all") return true;
             if (val === "in_maintenance_repl") return v.status === "in_maintenance" && v.hasActiveReplacement;
             if (val === "in_maintenance_no_repl") return v.status === "in_maintenance" && !v.hasActiveReplacement;
             return v.status === val;
           }).length,
+        }));
+
+        const flaggedByNames = [...new Set(vehicles.filter((v) => v.nonOperationalBy).map((v) => v.nonOperationalBy as string))].sort();
+        const flaggedByOptions: FilterOption[] = ["all", ...flaggedByNames].map((name) => ({
+          value: name,
+          label: name === "all" ? "Anyone" : name,
+          count: vehicles.filter((v) => matchesStatus(v) && matchesHub(v) && matchesType(v) && matchesSearch(v) && (name === "all" || v.nonOperationalBy === name)).length,
         }));
 
         return (
@@ -252,9 +286,12 @@ export default function Fleet() {
                 <FilterDropdown label="Type" options={typeOptions} value={filterType} onChange={setFilterType} />
                 <FilterDropdown label="Hub" options={hubOptions} value={filterHub} onChange={setFilterHub} />
                 <FilterDropdown label="Status" options={statusOptions} value={filterStatus} onChange={setFilterStatus} />
+                {flaggedByNames.length > 0 && (
+                  <FilterDropdown label="Flagged By" options={flaggedByOptions} value={filterFlaggedBy} onChange={setFilterFlaggedBy} />
+                )}
                 {filtersActive && (
                   <button
-                    onClick={() => { setFilterStatus("all"); setFilterHub("all"); setFilterType("all"); }}
+                    onClick={() => { setFilterStatus("all"); setFilterHub("all"); setFilterType("all"); setFilterFlaggedBy("all"); }}
                     style={{
                       padding: "6px 10px", borderRadius: 8, border: "none", background: "transparent",
                       color: "#A8A29E", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit",
@@ -293,10 +330,10 @@ export default function Fleet() {
             <th style={{ padding: "12px 16px" }}>ID</th>
             <th style={{ padding: "12px 16px" }}>
               <button
-                onClick={() => setSortAZ((v) => !v)}
-                style={{ background: "none", border: "none", fontWeight: 600, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: 0 }}
+                onClick={() => handleSort("plate")}
+                style={{ background: "none", border: "none", fontWeight: 600, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: 0, color: sortField === "plate" ? "#1C1917" : "#57534E" }}
               >
-                License Plate {sortAZ ? "↑" : "↓"}
+                License Plate {sortField === "plate" ? (sortAsc ? "↑" : "↓") : "↕"}
               </button>
             </th>
             <th style={{ padding: "12px 16px" }}>Brand & Model</th>
@@ -304,6 +341,14 @@ export default function Fleet() {
             <th style={{ padding: "12px 16px" }}>Hub</th>
             <th style={{ padding: "12px 16px" }}>Leasing</th>
             <th style={{ padding: "12px 16px" }}>Status</th>
+            <th style={{ padding: "12px 16px" }}>
+              <button
+                onClick={() => handleSort("flaggedBy")}
+                style={{ background: "none", border: "none", fontWeight: 600, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: 0, color: sortField === "flaggedBy" ? "#1C1917" : "#57534E" }}
+              >
+                Flagged By {sortField === "flaggedBy" ? (sortAsc ? "↑" : "↓") : "↕"}
+              </button>
+            </th>
             <th style={{ padding: "12px 16px" }}></th>
           </tr>
         </thead>
@@ -313,6 +358,7 @@ export default function Fleet() {
           )}
           {[...vehicles]
             .filter((v) => !plateFilter || v.licensePlate === plateFilter)
+            .filter((v) => matchesSearch(v))
             .filter((v) => plateFilter || filterStatus === "all" ? true
               : filterStatus === "in_maintenance_repl" ? v.status === "in_maintenance" && v.hasActiveReplacement
               : filterStatus === "in_maintenance_no_repl" ? v.status === "in_maintenance" && !v.hasActiveReplacement
@@ -320,7 +366,13 @@ export default function Fleet() {
             )
             .filter((v) => plateFilter || filterHub === "all" || v.hub === filterHub)
             .filter((v) => plateFilter || filterType === "all" || v.type === filterType)
-            .sort((a, b) => sortAZ ? a.licensePlate.localeCompare(b.licensePlate) : a.id - b.id)
+            .filter((v) => plateFilter || matchesFlaggedBy(v))
+            .sort((a, b) => {
+              const cmp = sortField === "plate" ? a.licensePlate.localeCompare(b.licensePlate)
+                : sortField === "flaggedBy" ? (a.nonOperationalBy ?? "").localeCompare(b.nonOperationalBy ?? "")
+                : a.id - b.id;
+              return sortAsc ? cmp : -cmp;
+            })
             .map((v) => (
             <tr key={v.id} style={{ borderTop: "1px solid #F5F5F4" }}>
               <td style={{ padding: "12px 16px" }}>{v.id}</td>
@@ -336,7 +388,14 @@ export default function Fleet() {
               <td style={{ padding: "12px 16px" }}>
                 <select
                   value={v.status}
-                  onChange={(e) => updateStatus(v.id, e.target.value)}
+                  onChange={(e) => {
+                    const newStatus = e.target.value;
+                    if (newStatus === "non_operational") {
+                      setNonOpVehicle(v);
+                    } else {
+                      updateStatus(v.id, newStatus);
+                    }
+                  }}
                   style={{
                     background: statusColor[v.status] + "22",
                     color: statusColor[v.status],
@@ -352,6 +411,36 @@ export default function Fleet() {
                     <option key={val} value={val}>{label}</option>
                   ))}
                 </select>
+              </td>
+              <td style={{ padding: "12px 16px" }}>
+                <span
+                  style={{ position: "relative", display: "inline-block" }}
+                  onMouseEnter={() => v.nonOperationalReason && setHoveredReasonId(v.id)}
+                  onMouseLeave={() => setHoveredReasonId((id) => (id === v.id ? null : id))}
+                >
+                  <span
+                    style={{
+                      color: v.nonOperationalBy ? "#DC2626" : "#A8A29E", fontSize: 13, fontWeight: v.nonOperationalBy ? 600 : 400,
+                      cursor: v.nonOperationalReason ? "help" : "default",
+                      textDecoration: v.nonOperationalReason ? "underline dotted" : "none",
+                      textUnderlineOffset: 3,
+                    }}
+                  >
+                    {v.nonOperationalBy ?? "—"}
+                  </span>
+                  {hoveredReasonId === v.id && v.nonOperationalReason && (
+                    <div
+                      style={{
+                        position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 30,
+                        background: "#1C1917", color: "#fff", fontSize: 12, fontWeight: 500,
+                        padding: "8px 12px", borderRadius: 8, width: 220, whiteSpace: "normal",
+                        boxShadow: "0 4px 16px rgba(0,0,0,0.2)", lineHeight: 1.4,
+                      }}
+                    >
+                      {v.nonOperationalReason}
+                    </div>
+                  )}
+                </span>
               </td>
               <td style={{ padding: "12px 16px" }}>
                 <div style={{ display: "flex", gap: 6 }}>
@@ -403,6 +492,14 @@ export default function Fleet() {
 
       {replacementVehicle && (
         <ReplacementVehicleModal vehicle={replacementVehicle} onClose={() => setReplacementVehicle(null)} />
+      )}
+
+      {nonOpVehicle && (
+        <MarkNonOperationalModal
+          vehicle={nonOpVehicle}
+          onClose={() => setNonOpVehicle(null)}
+          onConfirmed={() => { setNonOpVehicle(null); load(); }}
+        />
       )}
 
       {editingVehicle && (

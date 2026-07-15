@@ -63,7 +63,7 @@ router.get("/", async (_req, res) => {
 
   // Non-operational vehicles
   const { rows: nonOp } = await pool.query(`
-    SELECT v.id, v.license_plate, v.brand, v.model, v.hub
+    SELECT v.id, v.license_plate, v.brand, v.model, v.hub, v.non_operational_by, v.non_operational_reason
     FROM vehicles v
     WHERE v.status = 'non_operational' AND v.archived = FALSE
     ORDER BY v.license_plate
@@ -77,7 +77,7 @@ router.get("/", async (_req, res) => {
       vehicleId: r.id,
       licensePlate: r.license_plate,
       title: `Non-operational — ${r.license_plate}`,
-      body: `${[r.brand, r.model].filter(Boolean).join(" ")} is marked as non-operational.`,
+      body: `${[r.brand, r.model].filter(Boolean).join(" ")} is marked as non-operational${r.non_operational_by ? ` by ${r.non_operational_by}` : ""}${r.non_operational_reason ? ` — ${r.non_operational_reason}` : ""}.`,
       hub: r.hub,
     });
   }
