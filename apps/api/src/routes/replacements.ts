@@ -11,6 +11,8 @@ function mapReplacement(row: Record<string, unknown>) {
     brand: row.brand,
     model: row.model,
     type: row.type,
+    fuelType: row.fuel_type,
+    capacityLiters: row.capacity_liters,
     leaseCompany: row.lease_company,
     startDate: row.start_date,
     endDate: row.end_date,
@@ -39,7 +41,7 @@ router.get("/:vehicleId/history", async (req, res) => {
 
 // Assign a new replacement vehicle
 router.post("/:vehicleId", async (req, res) => {
-  const { licensePlate, brand, model, type, leaseCompany, startDate, notes } = req.body;
+  const { licensePlate, brand, model, type, fuelType, capacityLiters, leaseCompany, startDate, notes } = req.body;
 
   // Close any existing active replacement first
   await pool.query(
@@ -48,9 +50,9 @@ router.post("/:vehicleId", async (req, res) => {
   );
 
   const { rows } = await pool.query(
-    `INSERT INTO replacement_vehicles (vehicle_id, license_plate, brand, model, type, lease_company, start_date, notes)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-    [req.params.vehicleId, licensePlate, brand ?? null, model ?? null, type ?? null, leaseCompany ?? null, startDate, notes ?? null]
+    `INSERT INTO replacement_vehicles (vehicle_id, license_plate, brand, model, type, fuel_type, capacity_liters, lease_company, start_date, notes)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+    [req.params.vehicleId, licensePlate, brand ?? null, model ?? null, type ?? null, fuelType ?? null, capacityLiters ?? null, leaseCompany ?? null, startDate, notes ?? null]
   );
   res.status(201).json(mapReplacement(rows[0]));
 });

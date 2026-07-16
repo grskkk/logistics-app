@@ -1,6 +1,7 @@
 import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Fleet from "./pages/Fleet";
+import VehicleDetail from "./pages/VehicleDetail";
 import NotificationPanel from "./components/NotificationPanel";
 
 const linkStyle = { color: "#A8A29E", textDecoration: "none", fontWeight: 500, fontSize: 14, padding: "6px 12px", borderRadius: 6 };
@@ -22,6 +23,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/fleet" element={<Fleet />} />
+            <Route path="/fleet/:id" element={<VehicleDetail />} />
           </Routes>
         </div>
       </div>

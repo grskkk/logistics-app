@@ -46,6 +46,8 @@ export interface ReplacementVehicle {
   brand: string | null;
   model: string | null;
   type: string | null;
+  fuelType: "gas" | "diesel" | "electric" | null;
+  capacityLiters: number | null;
   leaseCompany: string | null;
   startDate: string;
   endDate: string | null;

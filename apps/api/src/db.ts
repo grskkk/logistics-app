@@ -67,6 +67,9 @@ export async function initDb(): Promise<void> {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
+    ALTER TABLE replacement_vehicles ADD COLUMN IF NOT EXISTS fuel_type TEXT;
+    ALTER TABLE replacement_vehicles ADD COLUMN IF NOT EXISTS capacity_liters NUMERIC;
+
     CREATE TABLE IF NOT EXISTS maintenance_logs (
       id SERIAL PRIMARY KEY,
       vehicle_id INT NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,

@@ -1,12 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import type { Vehicle } from "@logistics/shared";
 import { api } from "../api/client";
-import MaintenanceDrawer from "../components/MaintenanceDrawer";
-import VehicleEditDrawer from "../components/VehicleEditDrawer";
 import AddVehicleModal from "../components/AddVehicleModal";
-import ReplacementVehicleModal from "../components/ReplacementVehicleModal";
-import MarkNonOperationalModal from "../components/MarkNonOperationalModal";
 
 const statusColor: Record<string, string> = {
   operational: "#16A34A",
@@ -110,10 +106,6 @@ function FilterDropdown({
 export default function Fleet() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
-  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
-  const [replacementVehicle, setReplacementVehicle] = useState<Vehicle | null>(null);
-  const [nonOpVehicle, setNonOpVehicle] = useState<Vehicle | null>(null);
   const [hoveredReasonId, setHoveredReasonId] = useState<number | null>(null);
   const [sortField, setSortField] = useState<"id" | "plate" | "flaggedBy">("id");
   const [sortAsc, setSortAsc] = useState(true);
@@ -137,11 +129,6 @@ export default function Fleet() {
 
   const load = (archived = showArchived) => {
     api.get<Vehicle[]>(`/vehicles?archived=${archived}`).then(setVehicles).catch(console.error);
-  };
-
-  const updateStatus = async (id: number, status: string) => {
-    await api.put(`/vehicles/${id}`, { status });
-    await load();
   };
 
   const archiveVehicle = async (id: number) => {
@@ -376,7 +363,9 @@ export default function Fleet() {
             .map((v) => (
             <tr key={v.id} style={{ borderTop: "1px solid #F5F5F4" }}>
               <td style={{ padding: "12px 16px" }}>{v.id}</td>
-              <td style={{ padding: "12px 16px", fontWeight: 600 }}>{v.licensePlate}</td>
+              <td style={{ padding: "12px 16px", fontWeight: 600 }}>
+                <Link to={`/fleet/${v.id}`} style={{ color: "#1C1917", textDecoration: "none" }}>{v.licensePlate}</Link>
+              </td>
               <td style={{ padding: "12px 16px" }}>
                 {v.brand || v.model
                   ? <><span style={{ fontWeight: 600 }}>{v.brand}</span>{v.brand && v.model ? " " : ""}{v.model}</>
@@ -386,31 +375,20 @@ export default function Fleet() {
               <td style={{ padding: "12px 16px", color: v.hub ? "#1C1917" : "#A8A29E", fontSize: 13 }}>{v.hub ?? "—"}</td>
               <td style={{ padding: "12px 16px", color: v.leaseCompany ? "#1C1917" : "#A8A29E", fontSize: 13 }}>{v.leaseCompany ?? "—"}</td>
               <td style={{ padding: "12px 16px" }}>
-                <select
-                  value={v.status}
-                  onChange={(e) => {
-                    const newStatus = e.target.value;
-                    if (newStatus === "non_operational") {
-                      setNonOpVehicle(v);
-                    } else {
-                      updateStatus(v.id, newStatus);
-                    }
-                  }}
+                <span
                   style={{
+                    display: "inline-block",
                     background: statusColor[v.status] + "22",
                     color: statusColor[v.status],
                     border: `1px solid ${statusColor[v.status]}44`,
                     borderRadius: 12,
-                    padding: "2px 10px",
+                    padding: "3px 10px",
                     fontWeight: 600,
                     fontSize: 13,
-                    cursor: "pointer",
                   }}
                 >
-                  {Object.entries(statusLabel).map(([val, label]) => (
-                    <option key={val} value={val}>{label}</option>
-                  ))}
-                </select>
+                  {statusLabel[v.status]}
+                </span>
               </td>
               <td style={{ padding: "12px 16px" }}>
                 <span
@@ -444,30 +422,6 @@ export default function Fleet() {
               </td>
               <td style={{ padding: "12px 16px" }}>
                 <div style={{ display: "flex", gap: 6 }}>
-                  {!showArchived && (
-                    <>
-                      <button
-                        onClick={() => setEditingVehicle(v)}
-                        style={{ padding: "4px 12px", borderRadius: 6, border: "1px solid #E7E5E4", background: "#FAF9F7", fontSize: 12, fontWeight: 700, cursor: "pointer", color: "#57534E", fontFamily: "inherit" }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => setSelectedVehicle(v)}
-                        style={{ padding: "4px 12px", borderRadius: 6, border: "1px solid #E7E5E4", background: "#FAF9F7", fontSize: 12, fontWeight: 700, cursor: "pointer", color: "#57534E", fontFamily: "inherit" }}
-                      >
-                        Maintenance Log
-                      </button>
-                      {v.status === "in_maintenance" && (
-                        <button
-                          onClick={() => setReplacementVehicle(v)}
-                          style={{ padding: "4px 12px", borderRadius: 6, border: "1px solid #FED7AA", background: "#FFF7ED", fontSize: 12, fontWeight: 700, cursor: "pointer", color: "#C2410C", fontFamily: "inherit" }}
-                        >
-                          Replacement
-                        </button>
-                      )}
-                    </>
-                  )}
                   <button
                     onClick={() => v.archived ? unarchiveVehicle(v.id) : archiveVehicle(v.id)}
                     style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${v.archived ? "#22c55e44" : "#ef444444"}`, background: v.archived ? "#f0fdf4" : "#fff5f5", fontSize: 12, fontWeight: 600, cursor: "pointer", color: v.archived ? "#16a34a" : "#ef4444" }}
@@ -484,33 +438,6 @@ export default function Fleet() {
 
       {showAddModal && (
         <AddVehicleModal onClose={() => setShowAddModal(false)} onAdded={() => load()} />
-      )}
-
-      {selectedVehicle && (
-        <MaintenanceDrawer vehicle={selectedVehicle} onClose={() => setSelectedVehicle(null)} />
-      )}
-
-      {replacementVehicle && (
-        <ReplacementVehicleModal vehicle={replacementVehicle} onClose={() => setReplacementVehicle(null)} />
-      )}
-
-      {nonOpVehicle && (
-        <MarkNonOperationalModal
-          vehicle={nonOpVehicle}
-          onClose={() => setNonOpVehicle(null)}
-          onConfirmed={() => { setNonOpVehicle(null); load(); }}
-        />
-      )}
-
-      {editingVehicle && (
-        <VehicleEditDrawer
-          vehicle={editingVehicle}
-          onClose={() => setEditingVehicle(null)}
-          onSaved={(updated) => {
-            setVehicles((prev) => prev.map((v) => (v.id === updated.id ? updated : v)));
-            setEditingVehicle(null);
-          }}
-        />
       )}
     </div>
   );

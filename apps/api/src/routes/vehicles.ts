@@ -42,6 +42,21 @@ router.get("/", async (req, res) => {
   res.json(rows.map(mapVehicle));
 });
 
+router.get("/:id", async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT v.*,
+       EXISTS(
+         SELECT 1 FROM replacement_vehicles r
+         WHERE r.vehicle_id = v.id AND r.end_date IS NULL
+       ) AS has_active_replacement
+     FROM vehicles v
+     WHERE v.id = $1`,
+    [req.params.id]
+  );
+  if (!rows[0]) return res.status(404).json({ error: "Vehicle not found" });
+  res.json(mapVehicle(rows[0]));
+});
+
 router.post("/", async (req, res) => {
   const { licensePlate, type, status, brand, model, fuelType, capacityLiters, leaseStartDate, leaseCompany, hub, nonOperationalBy, nonOperationalReason } = req.body;
   const initialStatus = status ?? "operational";
