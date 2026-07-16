@@ -50,9 +50,9 @@ function FilterDropdown({
           display: "flex", alignItems: "center", gap: 6,
           padding: "6px 12px", borderRadius: 8, fontSize: 13, fontWeight: 700,
           cursor: "pointer", fontFamily: "inherit",
-          background: active ? "#1C1917" : "#fff",
-          color: active ? "#fff" : "#57534E",
-          border: `1px solid ${active ? "transparent" : "#E7E5E4"}`,
+          background: active ? "#1C1917" : "var(--panel)",
+          color: active ? "#fff" : "var(--text-secondary)",
+          border: `1px solid ${active ? "transparent" : "var(--border)"}`,
         }}
       >
         <span style={{ opacity: 0.6, fontWeight: 800, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5 }}>
@@ -69,8 +69,8 @@ function FilterDropdown({
         <div
           style={{
             position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 20,
-            background: "#fff", border: "1px solid #E7E5E4", borderRadius: 10,
-            boxShadow: "0 8px 24px rgba(0,0,0,0.14)", minWidth: 210, padding: 4,
+            background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 10,
+            boxShadow: "var(--shadow-modal)", minWidth: 210, padding: 4,
           }}
         >
           {options.map((o) => {
@@ -82,8 +82,8 @@ function FilterDropdown({
                 style={{
                   display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%",
                   padding: "7px 10px", paddingLeft: o.indent ? 26 : 10, borderRadius: 6, border: "none",
-                  background: isActive ? "#F5F5F4" : "transparent",
-                  color: "#1C1917", fontWeight: isActive ? 700 : 500, fontSize: o.indent ? 12.5 : 13,
+                  background: isActive ? "var(--panel-hover)" : "transparent",
+                  color: "var(--text)", fontWeight: isActive ? 700 : 500, fontSize: o.indent ? 12.5 : 13,
                   cursor: "pointer", fontFamily: "inherit", textAlign: "left",
                 }}
               >
@@ -148,8 +148,8 @@ export default function Fleet() {
     <div className="page">
       <div className="page-header">
         <div style={{ flex: 1 }}>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: "#1C1917" }}>{showArchived ? "Archived Vehicles" : "Fleet"}</h1>
-          <p style={{ margin: "4px 0 0", color: "#78716C", fontSize: 14 }}>{showArchived ? "Restore or review archived vehicles" : "Manage your vehicle fleet"}</p>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: "var(--text)" }}>{showArchived ? "Archived Vehicles" : "Fleet"}</h1>
+          <p style={{ margin: "4px 0 0", color: "var(--text-muted)", fontSize: 14 }}>{showArchived ? "Restore or review archived vehicles" : "Manage your vehicle fleet"}</p>
         </div>
         <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
           <input
@@ -158,15 +158,15 @@ export default function Fleet() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search license plate…"
             style={{
-              padding: "8px 14px", borderRadius: 8, border: "1px solid #D6D3D1",
-              fontSize: 13, fontFamily: "inherit", width: 240, color: "#1C1917",
+              padding: "8px 14px", borderRadius: 8, border: "1px solid var(--border-strong)",
+              fontSize: 13, fontFamily: "inherit", width: 240, color: "var(--text)", background: "var(--panel)",
             }}
           />
         </div>
         <div style={{ flex: 1, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", justifyContent: "flex-end" }}>
           <button
             onClick={() => setShowArchived((v) => !v)}
-            style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid #D6D3D1", background: showArchived ? "#1C1917" : "#fff", color: showArchived ? "#fff" : "#57534E", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
+            style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid var(--border-strong)", background: showArchived ? "#1C1917" : "var(--panel)", color: showArchived ? "#fff" : "var(--text-secondary)", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
           >
             {showArchived ? "← Active" : "Archived"}
           </button>
@@ -184,15 +184,15 @@ export default function Fleet() {
       {!showArchived && plateFilter && (
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-          background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 12,
+          background: "var(--accent-soft-bg)", border: "1px solid var(--accent-soft-border)", borderRadius: 12,
           padding: "10px 16px", marginBottom: 16,
         }}>
-          <span style={{ fontSize: 13, color: "#C2410C" }}>
+          <span style={{ fontSize: 13, color: "var(--accent-soft-text)" }}>
             Filtered from an alert — showing <strong>{plateFilter}</strong>
           </span>
           <button
             onClick={() => setSearchParams({})}
-            style={{ padding: "6px 10px", borderRadius: 8, border: "none", background: "transparent", color: "#C2410C", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+            style={{ padding: "6px 10px", borderRadius: 8, border: "none", background: "transparent", color: "var(--accent-soft-text)", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
           >
             Clear ✕
           </button>
@@ -256,8 +256,8 @@ export default function Fleet() {
         return (
           <div
             style={{
-              background: "#fff",
-              border: `1px solid ${filtersActive ? "#D97757" : "#E7E5E4"}`,
+              background: "var(--panel)",
+              border: `1px solid ${filtersActive ? "#D97757" : "var(--border)"}`,
               borderRadius: 12,
               padding: "14px 16px",
               marginBottom: 16,
@@ -281,7 +281,7 @@ export default function Fleet() {
                     onClick={() => { setFilterStatus("all"); setFilterHub("all"); setFilterType("all"); setFilterFlaggedBy("all"); }}
                     style={{
                       padding: "6px 10px", borderRadius: 8, border: "none", background: "transparent",
-                      color: "#A8A29E", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+                      color: "var(--text-faint)", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit",
                     }}
                   >
                     Clear ✕
@@ -292,15 +292,15 @@ export default function Fleet() {
                 style={{
                   display: "flex", alignItems: "baseline", gap: 6,
                   padding: "5px 12px", borderRadius: 20,
-                  background: filtersActive ? "#FFF7ED" : "#FAF9F7",
-                  border: `1px solid ${filtersActive ? "#FED7AA" : "#E7E5E4"}`,
+                  background: filtersActive ? "var(--accent-soft-bg)" : "var(--panel-alt)",
+                  border: `1px solid ${filtersActive ? "var(--accent-soft-border)" : "var(--border)"}`,
                   whiteSpace: "nowrap",
                 }}
               >
-                <span style={{ fontSize: 16, fontWeight: 800, color: filtersActive ? "#C2410C" : "#1C1917" }}>
+                <span style={{ fontSize: 16, fontWeight: 800, color: filtersActive ? "var(--accent-soft-text)" : "var(--text)" }}>
                   {filteredVehicles.length}
                 </span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#78716C" }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>
                   {filteredVehicles.length === 1 ? "vehicle" : "vehicles"}
                   {filtersActive && <> matching filters</>}
                 </span>
@@ -313,12 +313,12 @@ export default function Fleet() {
       <div className="table-wrapper">
       <table>
         <thead>
-          <tr style={{ background: "#FAF9F7", textAlign: "left", borderBottom: "1px solid #E7E5E4" }}>
+          <tr style={{ background: "var(--panel-alt)", textAlign: "left", borderBottom: "1px solid var(--border)" }}>
             <th style={{ padding: "12px 16px" }}>ID</th>
             <th style={{ padding: "12px 16px" }}>
               <button
                 onClick={() => handleSort("plate")}
-                style={{ background: "none", border: "none", fontWeight: 600, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: 0, color: sortField === "plate" ? "#1C1917" : "#57534E" }}
+                style={{ background: "none", border: "none", fontWeight: 600, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: 0, color: sortField === "plate" ? "var(--text)" : "var(--text-secondary)" }}
               >
                 License Plate {sortField === "plate" ? (sortAsc ? "↑" : "↓") : "↕"}
               </button>
@@ -331,7 +331,7 @@ export default function Fleet() {
             <th style={{ padding: "12px 16px" }}>
               <button
                 onClick={() => handleSort("flaggedBy")}
-                style={{ background: "none", border: "none", fontWeight: 600, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: 0, color: sortField === "flaggedBy" ? "#1C1917" : "#57534E" }}
+                style={{ background: "none", border: "none", fontWeight: 600, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: 0, color: sortField === "flaggedBy" ? "var(--text)" : "var(--text-secondary)" }}
               >
                 Flagged By {sortField === "flaggedBy" ? (sortAsc ? "↑" : "↓") : "↕"}
               </button>
@@ -341,7 +341,7 @@ export default function Fleet() {
         </thead>
         <tbody>
           {vehicles.length === 0 && (
-            <tr><td colSpan={5} style={{ padding: 24, textAlign: "center", color: "#94a3b8" }}>No vehicles yet.</td></tr>
+            <tr><td colSpan={5} style={{ padding: 24, textAlign: "center", color: "var(--text-faint)" }}>No vehicles yet.</td></tr>
           )}
           {[...vehicles]
             .filter((v) => !plateFilter || v.licensePlate === plateFilter)
@@ -361,19 +361,19 @@ export default function Fleet() {
               return sortAsc ? cmp : -cmp;
             })
             .map((v) => (
-            <tr key={v.id} style={{ borderTop: "1px solid #F5F5F4" }}>
+            <tr key={v.id} style={{ borderTop: "1px solid var(--border)", color: "var(--text)" }}>
               <td style={{ padding: "12px 16px" }}>{v.id}</td>
               <td style={{ padding: "12px 16px", fontWeight: 600 }}>
-                <Link to={`/fleet/${v.id}`} style={{ color: "#1C1917", textDecoration: "none" }}>{v.licensePlate}</Link>
+                <Link to={`/fleet/${v.id}`} style={{ color: "var(--text)", textDecoration: "none" }}>{v.licensePlate}</Link>
               </td>
               <td style={{ padding: "12px 16px" }}>
                 {v.brand || v.model
                   ? <><span style={{ fontWeight: 600 }}>{v.brand}</span>{v.brand && v.model ? " " : ""}{v.model}</>
-                  : <span style={{ color: "#94a3b8" }}>—</span>}
+                  : <span style={{ color: "var(--text-faint)" }}>—</span>}
               </td>
               <td style={{ padding: "12px 16px", textTransform: "capitalize" }}>{v.type}</td>
-              <td style={{ padding: "12px 16px", color: v.hub ? "#1C1917" : "#A8A29E", fontSize: 13 }}>{v.hub ?? "—"}</td>
-              <td style={{ padding: "12px 16px", color: v.leaseCompany ? "#1C1917" : "#A8A29E", fontSize: 13 }}>{v.leaseCompany ?? "—"}</td>
+              <td style={{ padding: "12px 16px", color: v.hub ? "var(--text)" : "var(--text-faint)", fontSize: 13 }}>{v.hub ?? "—"}</td>
+              <td style={{ padding: "12px 16px", color: v.leaseCompany ? "var(--text)" : "var(--text-faint)", fontSize: 13 }}>{v.leaseCompany ?? "—"}</td>
               <td style={{ padding: "12px 16px" }}>
                 <span
                   style={{
@@ -398,7 +398,7 @@ export default function Fleet() {
                 >
                   <span
                     style={{
-                      color: v.nonOperationalBy ? "#DC2626" : "#A8A29E", fontSize: 13, fontWeight: v.nonOperationalBy ? 600 : 400,
+                      color: v.nonOperationalBy ? "#DC2626" : "var(--text-faint)", fontSize: 13, fontWeight: v.nonOperationalBy ? 600 : 400,
                       cursor: v.nonOperationalReason ? "help" : "default",
                       textDecoration: v.nonOperationalReason ? "underline dotted" : "none",
                       textUnderlineOffset: 3,
@@ -424,7 +424,7 @@ export default function Fleet() {
                 <div style={{ display: "flex", gap: 6 }}>
                   <button
                     onClick={() => v.archived ? unarchiveVehicle(v.id) : archiveVehicle(v.id)}
-                    style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${v.archived ? "#22c55e44" : "#ef444444"}`, background: v.archived ? "#f0fdf4" : "#fff5f5", fontSize: 12, fontWeight: 600, cursor: "pointer", color: v.archived ? "#16a34a" : "#ef4444" }}
+                    style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${v.archived ? "var(--success-soft-border)" : "var(--danger-soft-border)"}`, background: v.archived ? "var(--success-soft-bg)" : "var(--danger-soft-bg)", fontSize: 12, fontWeight: 600, cursor: "pointer", color: v.archived ? "var(--success-soft-text)" : "var(--danger-soft-text)" }}
                   >
                     {v.archived ? "Restore" : "Archive"}
                   </button>

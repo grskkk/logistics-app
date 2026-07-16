@@ -87,7 +87,7 @@ export default function NotificationPanel() {
         }}
         title="Notifications"
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={count > 0 ? "#FBBF24" : "#A8A29E"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ stroke: count > 0 ? "#FBBF24" : "var(--text-faint)" }} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.73 21a2 2 0 0 1-3.46 0" />
         </svg>
@@ -109,24 +109,24 @@ export default function NotificationPanel() {
         <div style={{
           position: "absolute", top: "calc(100% + 8px)", right: 0,
           width: 380, maxHeight: 520, borderRadius: 12,
-          background: "#fff", boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
+          background: "var(--panel)", boxShadow: "var(--shadow-modal)",
           zIndex: 200, display: "flex", flexDirection: "column",
-          border: "1px solid #E7E5E4",
+          border: "1px solid var(--border)",
         }}>
           <div style={{
-            padding: "14px 18px", borderBottom: "1px solid #F5F5F4",
+            padding: "14px 18px", borderBottom: "1px solid var(--border)",
             display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8,
           }}>
-            <span style={{ fontWeight: 700, fontSize: 15 }}>Fleet Alerts</span>
+            <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text)" }}>Fleet Alerts</span>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 12, color: "#A8A29E" }}>
+              <span style={{ fontSize: 12, color: "var(--text-faint)" }}>
                 {high > 0 && <span style={{ color: "#DC2626", fontWeight: 700 }}>{high} urgent · </span>}
                 {count} total
               </span>
               {count > 0 && (
                 <button
                   onClick={dismissAll}
-                  style={{ background: "none", border: "none", color: "#A8A29E", fontWeight: 700, fontSize: 11, cursor: "pointer", fontFamily: "inherit", padding: 0 }}
+                  style={{ background: "none", border: "none", color: "var(--text-faint)", fontWeight: 700, fontSize: 11, cursor: "pointer", fontFamily: "inherit", padding: 0 }}
                 >
                   Clear all
                 </button>
@@ -136,7 +136,7 @@ export default function NotificationPanel() {
 
           <div style={{ overflowY: "auto", flex: 1 }}>
             {count === 0 && (
-              <div style={{ padding: 32, textAlign: "center", color: "#A8A29E", fontSize: 14 }}>
+              <div style={{ padding: 32, textAlign: "center", color: "var(--text-faint)", fontSize: 14 }}>
                 No alerts — fleet looks good!
               </div>
             )}
@@ -153,26 +153,26 @@ export default function NotificationPanel() {
                       key={n.id}
                       onClick={() => openVehicle(n)}
                       style={{
-                        padding: "12px 18px", borderBottom: "1px solid #F5F5F4",
+                        padding: "12px 18px", borderBottom: "1px solid var(--border)",
                         display: "flex", gap: 10, alignItems: "flex-start",
                         cursor: "pointer",
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "#FAF9F7")}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--panel-hover)")}
                       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                     >
                       <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{typeIcon[n.type]}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 600, fontSize: 13, color: "#1C1917" }}>{n.title}</div>
-                        <div style={{ fontSize: 12, color: "#78716C", marginTop: 2, lineHeight: 1.4 }}>{n.body}</div>
+                        <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text)" }}>{n.title}</div>
+                        <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2, lineHeight: 1.4 }}>{n.body}</div>
                         {n.hub && (
-                          <div style={{ fontSize: 11, color: "#A8A29E", marginTop: 4 }}>Hub: {n.hub}</div>
+                          <div style={{ fontSize: 11, color: "var(--text-faint)", marginTop: 4 }}>Hub: {n.hub}</div>
                         )}
                       </div>
                       <button
                         onClick={(e) => { e.stopPropagation(); dismiss(n.id); }}
                         title="Dismiss"
                         style={{
-                          background: "none", border: "none", color: "#D6D3D1", fontSize: 14,
+                          background: "none", border: "none", color: "var(--border-strong)", fontSize: 14,
                           cursor: "pointer", padding: 2, flexShrink: 0, lineHeight: 1,
                         }}
                       >
