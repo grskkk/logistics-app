@@ -44,6 +44,17 @@ REPAIR_MAP = {
     "προβλημα καταλυτη": "Catalytic Converter",
 }
 
+# Reverse lookup: English label -> every raw label (this map's keys, plus known
+# label variants used elsewhere, e.g. import_fleet.py hardcodes "Αλλαγή
+# Ελαστικών" with a capital Ε, which doesn't match this map's own lowercase key)
+# that also translates to it. Lets us recognize the same repair logged under a
+# different raw spelling by another import script, without treating same-day/
+# same-odometer repairs of genuinely different types as duplicates.
+REVERSE_MAP = {}
+for _raw, _english in REPAIR_MAP.items():
+    REVERSE_MAP.setdefault(_english, set()).add(_raw)
+REVERSE_MAP["Tire Change"].add("Αλλαγή Ελαστικών")
+
 def clean_plate(s):
     return re.sub(r'[\s\-]', '', s.strip().upper()) if s else None
 
@@ -126,13 +137,19 @@ with open(CSV_PATH, encoding='utf-8-sig') as f:
             workshop = workshop_raw or None
             notes = notes_raw or None
 
-            # Existing record? Backfill its "date out" if we now have one, otherwise skip.
+            # Existing record? Match on this exact label or any other raw label
+            # that also translates to it (REVERSE_MAP) — catches the same repair
+            # logged under an untranslated Greek label by another import script,
+            # without conflating same-day/same-odometer repairs of genuinely
+            # different types (e.g. a Service + Brakes done in one shop visit).
+            # Backfill its "date out" if we now have one, otherwise skip.
+            possible_labels = {service_type} | REVERSE_MAP.get(service_type, set())
             cur.execute("""
                 SELECT id, returned_at FROM maintenance_logs
                 WHERE vehicle_id = %s
                   AND performed_at::date = %s
-                  AND service_type = %s
-            """, (vehicle_id, performed_at, service_type))
+                  AND service_type = ANY(%s)
+            """, (vehicle_id, performed_at, list(possible_labels)))
             existing = cur.fetchone()
             if existing:
                 log_id, existing_returned = existing

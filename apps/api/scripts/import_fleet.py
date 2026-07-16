@@ -11,8 +11,6 @@ import psycopg2
 CSV_PATH = "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet -   VAN (2).csv"
 DB_URL = "postgresql://giorgoskefalakis@localhost:5432/logistics"
 
-TODAY = date.today()
-
 
 # ── Date parsing ─────────────────────────────────────────────────────────────
 
@@ -201,26 +199,25 @@ def main():
                 pass
         tire_date = parse_date(col(row, 22))
 
-        # Last two columns: extra repair info
+        # Last column, when present without a second-to-last value, is the
+        # tire change workshop (see "Extra workshop entry" note below for why
+        # the other last-two-column shape isn't used).
         last_col = col(row, -1) if len(row) >= 1 else ''
         second_last = col(row, -2) if len(row) >= 2 else ''
-        # Avoid reading from cols that aren't the actual last columns
-        # (only use last two if they're not the same as earlier cols)
-        extra_workshop = None
-        extra_service = None
         tire_workshop = None
 
         if tire_change and not second_last and last_col and last_col != workshop:
             tire_workshop = last_col
-        elif second_last and last_col and len(row) > 22:
-            extra_service = second_last
-            extra_workshop = last_col
 
         # Determine vehicle status: column I (replacement/service col) drives this.
         # A license plate or "service" in that column means the vehicle is in maintenance.
         if repl_is_plate or repl_is_service:
             status = 'in_maintenance'
-            maintenance_since = repl_date if repl_is_plate and repl_date else (maint_date or TODAY)
+            # Use the earliest known related date — the sheet's replacement-start
+            # date (repl_date) is often days after the actual repair was first
+            # logged (maint_date); the vehicle has been out of service since then.
+            since_candidates = [d for d in (repl_date, maint_date) if d]
+            maintenance_since = min(since_candidates) if since_candidates else None
         else:
             status = 'operational'
             maintenance_since = None
@@ -286,7 +283,7 @@ def main():
                 maint_added += 1
             except Exception as e:
                 print(f"  Error inserting maintenance for {plate}: {e}")
-        elif repl_is_service and workshop:
+        elif repl_is_service and workshop and maint_date:
             # "service" in replacement col — vehicle is in workshop, no replacement
             try:
                 cur.execute(
@@ -297,7 +294,7 @@ def main():
                     VALUES (%s,%s,%s,%s,%s,%s)
                     """,
                     (vehicle_id, service_type or 'Συντήρηση', notes,
-                     maint_date or TODAY, workshop, km_val)
+                     maint_date, workshop, km_val)
                 )
                 maint_added += 1
             except Exception as e:
@@ -320,20 +317,10 @@ def main():
             except Exception as e:
                 print(f"  Error inserting tire change for {plate}: {e}")
 
-        # Extra workshop entry (last two columns, not tire-related)
-        if extra_service and extra_workshop and extra_workshop != workshop:
-            try:
-                cur.execute(
-                    """
-                    INSERT INTO maintenance_logs
-                      (vehicle_id, service_type, notes, performed_at, workshop)
-                    VALUES (%s,%s,%s,%s,%s)
-                    """,
-                    (vehicle_id, extra_service, None, TODAY, extra_workshop)
-                )
-                maint_added += 1
-            except Exception as e:
-                print(f"  Error inserting extra maintenance for {plate}: {e}")
+        # Note: when second_last/last_col hold a repair type + workshop instead
+        # of a tire change (i.e. tire_workshop above wasn't set), there's no
+        # accompanying date column for that pair — intentionally not written to
+        # maintenance_logs, since a fabricated date is worse than no entry.
 
     conn.commit()
     cur.close()
