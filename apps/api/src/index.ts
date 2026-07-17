@@ -10,6 +10,7 @@ import driversRouter from "./routes/drivers";
 import maintenanceRouter from "./routes/maintenance";
 import replacementsRouter from "./routes/replacements";
 import notificationsRouter from "./routes/notifications";
+import appointmentsRouter from "./routes/appointments";
 
 dotenv.config();
 
@@ -48,6 +49,7 @@ app.use("/api/drivers", driversRouter);
 app.use("/api/maintenance", maintenanceRouter);
 app.use("/api/replacements", replacementsRouter);
 app.use("/api/notifications", notificationsRouter);
+app.use("/api/appointments", appointmentsRouter);
 
 // Serve web frontend in production
 const publicDir = path.join(__dirname, "../public");

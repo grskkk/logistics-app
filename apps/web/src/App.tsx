@@ -3,6 +3,7 @@ import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Fleet from "./pages/Fleet";
 import VehicleDetail from "./pages/VehicleDetail";
+import Appointments from "./pages/Appointments";
 import Login from "./pages/Login";
 import NotificationPanel from "./components/NotificationPanel";
 import { api, AUTH_EVENT } from "./api/client";
@@ -51,6 +52,7 @@ export default function App() {
           <div style={{ display: "flex", alignItems: "center", gap: 4, flex: 1, overflowX: "auto", WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"] }}>
             <NavLink to="/" style={({ isActive }) => ({ ...linkStyle, ...(isActive ? activeStyle : {}), whiteSpace: "nowrap" })} end>Dashboard</NavLink>
             <NavLink to="/fleet" style={({ isActive }) => ({ ...linkStyle, ...(isActive ? activeStyle : {}), whiteSpace: "nowrap" })}>Fleet</NavLink>
+            <NavLink to="/appointments" style={({ isActive }) => ({ ...linkStyle, ...(isActive ? activeStyle : {}), whiteSpace: "nowrap" })}>Appointments</NavLink>
           </div>
           <button
             onClick={toggleTheme}
@@ -81,6 +83,7 @@ export default function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/fleet" element={<Fleet />} />
             <Route path="/fleet/:id" element={<VehicleDetail />} />
+            <Route path="/appointments" element={<Appointments />} />
           </Routes>
         </div>
       </div>

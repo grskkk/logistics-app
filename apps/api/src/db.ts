@@ -108,6 +108,17 @@ export async function initDb(): Promise<void> {
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
 
+    CREATE TABLE IF NOT EXISTS appointments (
+      id SERIAL PRIMARY KEY,
+      vehicle_id INT NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
+      scheduled_at TIMESTAMPTZ NOT NULL,
+      workshop TEXT,
+      reason TEXT NOT NULL,
+      notes TEXT,
+      status TEXT NOT NULL DEFAULT 'scheduled',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
     -- Enable Row Level Security on every public table. With RLS on and no
     -- policies, Supabase's auto-generated REST API (PostgREST, via the anon /
     -- authenticated keys) is denied all access. This API connects as the table
@@ -119,5 +130,6 @@ export async function initDb(): Promise<void> {
     ALTER TABLE maintenance_logs ENABLE ROW LEVEL SECURITY;
     ALTER TABLE maintenance_periods ENABLE ROW LEVEL SECURITY;
     ALTER TABLE shipments ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
   `);
 }

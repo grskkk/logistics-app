@@ -75,6 +75,20 @@ export interface MaintenanceLog {
   createdAt: string;
 }
 
+export type AppointmentStatus = "scheduled" | "completed" | "cancelled";
+
+export interface Appointment {
+  id: number;
+  vehicleId: number;
+  licensePlate: string; // joined from vehicles for display
+  scheduledAt: string; // ISO timestamp
+  workshop: string | null;
+  reason: string;
+  notes: string | null;
+  status: AppointmentStatus;
+  createdAt: string;
+}
+
 export interface FleetNotification {
   id: string;
   type: "no_replacement" | "long_repair" | "non_operational";
