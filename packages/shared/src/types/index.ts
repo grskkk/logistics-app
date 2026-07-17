@@ -81,6 +81,7 @@ export interface Appointment {
   id: number;
   vehicleId: number;
   licensePlate: string; // joined from vehicles for display
+  hub: string | null; // joined from vehicles for display
   scheduledAt: string; // ISO timestamp
   workshop: string | null;
   reason: string;
