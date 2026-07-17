@@ -147,6 +147,7 @@ export default function Appointments() {
         <thead>
           <tr>
             <th style={th}>Vehicle</th>
+            <th style={th}>Hub</th>
             <th style={th}>Date &amp; time</th>
             <th style={th}>Workshop</th>
             <th style={th}>Reason</th>
@@ -156,11 +157,12 @@ export default function Appointments() {
         </thead>
         <tbody>
           {list.length === 0 && (
-            <tr><td style={{ ...td, color: "var(--text-faint)" }} colSpan={6}>{emptyMsg}</td></tr>
+            <tr><td style={{ ...td, color: "var(--text-faint)" }} colSpan={7}>{emptyMsg}</td></tr>
           )}
           {list.map((a) => (
             <tr key={a.id}>
               <td style={{ ...td, fontWeight: 700 }}>{a.licensePlate}</td>
+              <td style={td}>{a.hub || <span style={{ color: "var(--text-faint)" }}>—</span>}</td>
               <td style={{ ...td, whiteSpace: "nowrap" }}>{fmtDateTime(a.scheduledAt)}</td>
               <td style={td}>{a.workshop || <span style={{ color: "var(--text-faint)" }}>—</span>}</td>
               <td style={td}>

@@ -8,6 +8,7 @@ function mapAppointment(row: Record<string, unknown>) {
     id: row.id,
     vehicleId: row.vehicle_id,
     licensePlate: row.license_plate,
+    hub: row.hub,
     scheduledAt: row.scheduled_at,
     workshop: row.workshop,
     reason: row.reason,
@@ -20,7 +21,7 @@ function mapAppointment(row: Record<string, unknown>) {
 // Re-read a single appointment joined with its vehicle plate.
 async function fetchOne(id: number) {
   const { rows } = await pool.query(
-    `SELECT a.*, v.license_plate
+    `SELECT a.*, v.license_plate, v.hub
      FROM appointments a JOIN vehicles v ON v.id = a.vehicle_id
      WHERE a.id = $1`,
     [id]
@@ -30,7 +31,7 @@ async function fetchOne(id: number) {
 
 router.get("/", async (_req, res) => {
   const { rows } = await pool.query(
-    `SELECT a.*, v.license_plate
+    `SELECT a.*, v.license_plate, v.hub
      FROM appointments a JOIN vehicles v ON v.id = a.vehicle_id
      ORDER BY a.scheduled_at ASC`
   );
