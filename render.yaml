@@ -9,3 +9,9 @@ services:
     envVars:
       - key: DATABASE_URL
         sync: false
+      # Shared login password — set this in the Render dashboard to require login.
+      - key: AUTH_PASSWORD
+        sync: false
+      # Random secret for signing session cookies. Render can generate one.
+      - key: AUTH_SECRET
+        generateValue: true
