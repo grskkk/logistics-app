@@ -38,6 +38,15 @@ async function put<T>(path: string, body: unknown): Promise<T> {
   return handle<T>(res);
 }
 
+async function del(path: string): Promise<void> {
+  const res = await fetch(`${BASE}${path}`, { method: "DELETE", credentials: "include" });
+  if (res.status === 401) {
+    window.dispatchEvent(new Event(AUTH_EVENT));
+    throw new Error("Not authenticated");
+  }
+  if (!res.ok) throw new Error(await res.text());
+}
+
 // --- Auth ---
 async function me(): Promise<{ authenticated: boolean; authEnabled: boolean }> {
   const res = await fetch(`${BASE}/me`, { credentials: "include" });
@@ -62,4 +71,4 @@ async function logout(): Promise<void> {
   await fetch(`${BASE}/logout`, { method: "POST", credentials: "include" });
 }
 
-export const api = { get, post, put, me, login, logout };
+export const api = { get, post, put, del, me, login, logout };
