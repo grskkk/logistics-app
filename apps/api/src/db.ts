@@ -107,5 +107,17 @@ export async function initDb(): Promise<void> {
       created_at TIMESTAMPTZ DEFAULT NOW(),
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
+
+    -- Enable Row Level Security on every public table. With RLS on and no
+    -- policies, Supabase's auto-generated REST API (PostgREST, via the anon /
+    -- authenticated keys) is denied all access. This API connects as the table
+    -- owner, which bypasses RLS, so our own queries are unaffected. Clears the
+    -- Supabase "RLS has not been enabled" security-advisor warnings.
+    ALTER TABLE drivers ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE vehicles ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE replacement_vehicles ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE maintenance_logs ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE maintenance_periods ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE shipments ENABLE ROW LEVEL SECURITY;
   `);
 }
