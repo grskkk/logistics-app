@@ -2,14 +2,21 @@
 """Import fleet data from CSV into the logistics database."""
 
 import csv
+import os
 import re
 import sys
 from datetime import datetime, date
 
 import psycopg2
 
-CSV_PATH = "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet -   VAN (2).csv"
-DB_URL = "postgresql://giorgoskefalakis@localhost:5432/logistics"
+# Target database. Override to import into a different environment, e.g.
+#   DATABASE_URL="postgres://...render..." python3 import_fleet.py
+CSV_PATH = os.environ.get(
+    "FLEET_CSV", "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet -   VAN (2).csv"
+)
+DB_URL = os.environ.get(
+    "DATABASE_URL", "postgresql://giorgoskefalakis@localhost:5432/logistics"
+)
 
 
 # ── Date parsing ─────────────────────────────────────────────────────────────

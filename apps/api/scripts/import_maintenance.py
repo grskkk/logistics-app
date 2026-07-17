@@ -3,12 +3,20 @@
 Only imports logs for vehicles already in the database — no new vehicles created.
 """
 import csv
+import os
 import re
 import psycopg2
 from datetime import datetime
 
-DB_URL = "postgresql://giorgoskefalakis@localhost:5432/logistics"
-CSV_PATH = "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet - Van maintenance report (2).csv"
+# Target database. Override to backfill a different environment, e.g.
+#   DATABASE_URL="postgres://...render..." python3 import_maintenance.py
+DB_URL = os.environ.get(
+    "DATABASE_URL", "postgresql://giorgoskefalakis@localhost:5432/logistics"
+)
+CSV_PATH = os.environ.get(
+    "MAINTENANCE_CSV",
+    "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet - Van maintenance report (2).csv",
+)
 
 REPAIR_MAP = {
     "Service": "Service",
