@@ -86,11 +86,14 @@ def parse_km(s):
     except ValueError:
         return None
 
+print(f"Connecting to database...", flush=True)
 conn = psycopg2.connect(DB_URL)
 cur = conn.cursor()
+print(f"Reading CSV: {CSV_PATH}", flush=True)
 
 cur.execute("SELECT id, license_plate FROM vehicles WHERE archived = FALSE")
 plate_to_id = {row[1]: row[0] for row in cur.fetchall()}
+print(f"Loaded {len(plate_to_id)} vehicles. Processing maintenance rows...", flush=True)
 
 inserted = 0
 skipped_no_vehicle = 0
@@ -102,7 +105,9 @@ with open(CSV_PATH, encoding='utf-8-sig') as f:
     reader = csv.reader(f)
     next(reader)  # skip header
 
-    for row in reader:
+    for row_num, row in enumerate(reader, start=1):
+        if row_num % 50 == 0:
+            print(f"  ...processed {row_num} rows", flush=True)
         if not row or not row[0].strip():
             continue
 
