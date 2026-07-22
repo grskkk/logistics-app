@@ -12,7 +12,7 @@ import psycopg2
 # Target database. Override to import into a different environment, e.g.
 #   DATABASE_URL="postgres://...render..." python3 import_fleet.py
 CSV_PATH = os.environ.get(
-    "FLEET_CSV", "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet -   VAN (2).csv"
+    "FLEET_CSV", "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet -   VAN (4).csv"
 )
 DB_URL = os.environ.get(
     "DATABASE_URL", "postgresql://giorgoskefalakis@localhost:5432/logistics"

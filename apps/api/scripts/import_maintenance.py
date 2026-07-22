@@ -15,7 +15,7 @@ DB_URL = os.environ.get(
 )
 CSV_PATH = os.environ.get(
     "MAINTENANCE_CSV",
-    "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet - Van maintenance report (2).csv",
+    "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet - Van maintenance report (3).csv",
 )
 
 REPAIR_MAP = {
