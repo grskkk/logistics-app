@@ -23,7 +23,7 @@ import psycopg2
 from import_fleet import clean_plate
 
 CSV_PATH = os.environ.get(
-    "APPOINTMENTS_CSV", "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet -    VAN rantevou.csv"
+    "APPOINTMENTS_CSV", "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet -    VAN rantevou (2).csv"
 )
 DB_URL = os.environ.get("DATABASE_URL", "postgresql://giorgoskefalakis@localhost:5432/logistics")
 APPLY = os.environ.get("APPLY") == "1"

@@ -31,7 +31,7 @@ import psycopg2
 from import_fleet import parse_date, clean_plate, is_real_plate, col
 
 CSV_PATH = os.environ.get(
-    "FLEET_CSV", "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet -   VAN (2).csv"
+    "FLEET_CSV", "/Users/giorgoskefalakis/Downloads/Motorcycle Fleet -   VAN (4).csv"
 )
 DB_URL = os.environ.get(
     "DATABASE_URL", "postgresql://giorgoskefalakis@localhost:5432/logistics"
