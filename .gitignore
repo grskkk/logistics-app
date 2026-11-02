@@ -7,3 +7,8 @@ build
 .expo
 apps/api/public
 /resume
+
+# Fleet workbooks / CSV exports — contain driver PII, never commit (repo is public)
+*.xlsx
+*.xls
+__pycache__/
