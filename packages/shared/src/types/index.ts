@@ -32,6 +32,7 @@ export interface Vehicle {
   hub: string | null;
   archived: boolean;
   hasActiveReplacement: boolean;
+  replacementPlate: string | null;
   driverId: number | null;
   location: Location | null;
   nonOperationalBy: string | null;
