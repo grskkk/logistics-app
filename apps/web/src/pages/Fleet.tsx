@@ -375,20 +375,42 @@ export default function Fleet() {
               <td style={{ padding: "12px 16px", color: v.hub ? "var(--text)" : "var(--text-faint)", fontSize: 13 }}>{v.hub ?? "—"}</td>
               <td style={{ padding: "12px 16px", color: v.leaseCompany ? "var(--text)" : "var(--text-faint)", fontSize: 13 }}>{v.leaseCompany ?? "—"}</td>
               <td style={{ padding: "12px 16px" }}>
-                <span
-                  style={{
-                    display: "inline-block",
-                    background: statusColor[v.status] + "22",
-                    color: statusColor[v.status],
-                    border: `1px solid ${statusColor[v.status]}44`,
-                    borderRadius: 12,
-                    padding: "3px 10px",
-                    fontWeight: 600,
-                    fontSize: 13,
-                  }}
-                >
-                  {statusLabel[v.status]}
-                </span>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      background: statusColor[v.status] + "22",
+                      color: statusColor[v.status],
+                      border: `1px solid ${statusColor[v.status]}44`,
+                      borderRadius: 12,
+                      padding: "3px 10px",
+                      fontWeight: 600,
+                      fontSize: 13,
+                    }}
+                  >
+                    {statusLabel[v.status]}
+                  </span>
+                  {v.replacementPlate && (
+                    <span
+                      title={`Replacement vehicle: ${v.replacementPlate}`}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                        background: "#16A34A22",
+                        color: "#16A34A",
+                        border: "1px solid #16A34A44",
+                        borderRadius: 12,
+                        padding: "2px 9px",
+                        fontWeight: 600,
+                        fontSize: 12,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      🔄 {v.replacementPlate}
+                    </span>
+                  )}
+                </div>
               </td>
               <td style={{ padding: "12px 16px" }}>
                 <span

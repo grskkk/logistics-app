@@ -18,6 +18,7 @@ function mapVehicle(row: Record<string, unknown>) {
     hub: row.hub,
     archived: row.archived,
     hasActiveReplacement: row.has_active_replacement ?? false,
+    replacementPlate: row.replacement_plate ?? null,
     driverId: row.driver_id,
     location: row.location,
     nonOperationalBy: row.non_operational_by,
@@ -33,7 +34,12 @@ router.get("/", async (req, res) => {
        EXISTS(
          SELECT 1 FROM replacement_vehicles r
          WHERE r.vehicle_id = v.id AND r.end_date IS NULL
-       ) AS has_active_replacement
+       ) AS has_active_replacement,
+       (
+         SELECT r.license_plate FROM replacement_vehicles r
+         WHERE r.vehicle_id = v.id AND r.end_date IS NULL
+         ORDER BY r.created_at DESC LIMIT 1
+       ) AS replacement_plate
      FROM vehicles v
      WHERE v.archived = $1
      ORDER BY v.id`,
@@ -48,7 +54,12 @@ router.get("/:id", async (req, res) => {
        EXISTS(
          SELECT 1 FROM replacement_vehicles r
          WHERE r.vehicle_id = v.id AND r.end_date IS NULL
-       ) AS has_active_replacement
+       ) AS has_active_replacement,
+       (
+         SELECT r.license_plate FROM replacement_vehicles r
+         WHERE r.vehicle_id = v.id AND r.end_date IS NULL
+         ORDER BY r.created_at DESC LIMIT 1
+       ) AS replacement_plate
      FROM vehicles v
      WHERE v.id = $1`,
     [req.params.id]
