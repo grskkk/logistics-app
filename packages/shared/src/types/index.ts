@@ -93,7 +93,7 @@ export interface Appointment {
 
 export interface FleetNotification {
   id: string;
-  type: "no_replacement";
+  type: "no_replacement" | "appointment_tomorrow";
   severity: "high" | "medium" | "low";
   vehicleId: number;
   licensePlate: string;
