@@ -168,6 +168,11 @@ router.put("/:id", async (req, res) => {
       "UPDATE maintenance_periods SET end_date = CURRENT_DATE WHERE vehicle_id = $1 AND end_date IS NULL",
       [req.params.id]
     );
+    // Vehicle is back in service, so any active replacement is no longer needed.
+    await pool.query(
+      "UPDATE replacement_vehicles SET end_date = NOW() WHERE vehicle_id = $1 AND end_date IS NULL",
+      [req.params.id]
+    );
   }
 
   res.json(mapVehicle(rows[0]));
