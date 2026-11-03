@@ -123,6 +123,7 @@ export default function VehicleDetail() {
   const [workshop, setWorkshop] = useState("");
   const [kmAtService, setKmAtService] = useState("");
   const [submittingLog, setSubmittingLog] = useState(false);
+  const [returningFromShop, setReturningFromShop] = useState(false);
 
   // Replacement
   const [activeReplacement, setActiveReplacement] = useState<ReplacementVehicle | null>(null);
@@ -231,6 +232,20 @@ export default function VehicleDetail() {
       setInfoError("Failed to save changes.");
     } finally {
       setSavingInfo(false);
+    }
+  };
+
+  // Vehicle is back from the workshop: flip it to operational, which closes the
+  // open maintenance period (and any active replacement) on the API side.
+  const handleReturnFromShop = async () => {
+    setReturningFromShop(true);
+    try {
+      const updated = await api.put<Vehicle>(`/vehicles/${id}`, { status: "operational" });
+      setVehicle(updated);
+      loadMaintenance();
+      loadReplacements();
+    } finally {
+      setReturningFromShop(false);
     }
   };
 
@@ -479,7 +494,24 @@ export default function VehicleDetail() {
 
       {/* Maintenance */}
       <div style={card}>
-        <div style={cardTitle}>Maintenance</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
+          <div style={{ ...cardTitle, marginBottom: 0 }}>Maintenance</div>
+          {vehicle.status === "in_maintenance" && (
+            <button
+              onClick={handleReturnFromShop}
+              disabled={returningFromShop}
+              title="Mark the vehicle as back from the workshop and close the open maintenance period"
+              style={{
+                padding: "8px 16px", borderRadius: 8, border: "1px solid #16A34A44",
+                background: returningFromShop ? "var(--border-strong)" : "#16A34A22", color: "#16A34A",
+                fontWeight: 700, fontSize: 13, cursor: returningFromShop ? "not-allowed" : "pointer",
+                fontFamily: "inherit", whiteSpace: "nowrap",
+              }}
+            >
+              {returningFromShop ? "Closing..." : "✓ Returned from workshop"}
+            </button>
+          )}
+        </div>
 
         <form onSubmit={handleLogSubmit} style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 22, paddingBottom: 22, borderBottom: "1px solid var(--border)" }}>
           <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text)" }}>Log New Service</div>
