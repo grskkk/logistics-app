@@ -11,6 +11,7 @@ const severityColor: Record<string, string> = {
 
 const typeIcon: Record<string, string> = {
   no_replacement: "🔴",
+  appointment_tomorrow: "📅",
 };
 
 const DISMISSED_KEY = "logitrack_dismissed_notifications";

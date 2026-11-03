@@ -37,6 +37,34 @@ router.get("/", async (_req, res) => {
     });
   }
 
+  // Tomorrow's appointments — a daily heads-up that only surfaces from 15:00
+  // Greek time onward, so during the afternoon you see what's booked for the
+  // next day. All times are evaluated in Europe/Athens.
+  const { rows: tomorrow } = await pool.query(`
+    SELECT a.id, a.vehicle_id, a.scheduled_at, a.workshop, a.reason, v.license_plate, v.hub,
+           to_char(a.scheduled_at AT TIME ZONE 'Europe/Athens', 'HH24:MI') AS time_gr
+    FROM appointments a
+    JOIN vehicles v ON v.id = a.vehicle_id
+    WHERE a.status NOT IN ('completed', 'cancelled')
+      AND (a.scheduled_at AT TIME ZONE 'Europe/Athens')::date
+          = (now() AT TIME ZONE 'Europe/Athens')::date + 1
+      AND (now() AT TIME ZONE 'Europe/Athens')::time >= TIME '15:00'
+    ORDER BY a.scheduled_at ASC
+  `);
+
+  for (const a of tomorrow) {
+    notes.push({
+      id: `appt-tomorrow-${a.id}`,
+      type: "appointment_tomorrow",
+      severity: "low",
+      vehicleId: a.vehicle_id,
+      licensePlate: a.license_plate,
+      title: `Tomorrow ${a.time_gr} — ${a.license_plate}`,
+      body: [a.reason, a.workshop].filter(Boolean).join(" · ") || "Scheduled appointment",
+      hub: a.hub,
+    });
+  }
+
   res.json(notes);
 });
 
