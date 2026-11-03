@@ -72,6 +72,17 @@ router.delete("/period/:periodId", async (req, res) => {
   res.status(204).end();
 });
 
+// Delete a single maintenance record (a log entered by mistake). The parent
+// period, if any, is left intact.
+router.delete("/log/:logId", async (req, res) => {
+  const { rows } = await pool.query(
+    "DELETE FROM maintenance_logs WHERE id = $1 RETURNING id",
+    [req.params.logId]
+  );
+  if (!rows[0]) return res.status(404).json({ error: "Maintenance record not found" });
+  res.status(204).end();
+});
+
 router.post("/:vehicleId", async (req, res) => {
   const { serviceType, notes, performedAt, returnedAt, workshop, kmAtService } = req.body;
   const { rows } = await pool.query(

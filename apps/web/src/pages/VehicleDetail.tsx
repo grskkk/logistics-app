@@ -282,6 +282,16 @@ export default function VehicleDetail() {
     loadReplacements();
   };
 
+  // Delete a single maintenance record (a log entered by mistake).
+  const handleDeleteLog = async (log: MaintenanceLog) => {
+    const span = log.returnedAt
+      ? `${fmtDate(log.performedAt)} → ${fmtDate(log.returnedAt)}`
+      : fmtDate(log.performedAt);
+    if (!window.confirm(`Delete this maintenance record (${log.serviceType}, ${span})? This cannot be undone.`)) return;
+    await api.del(`/maintenance/log/${log.id}`);
+    loadMaintenance();
+  };
+
   const handleAssignReplacement = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmittingReplacement(true);
@@ -579,9 +589,18 @@ export default function VehicleDetail() {
               <div key={log.id} style={{ borderLeft: "3px solid #D97757", paddingLeft: 14, marginBottom: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
                   <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text)" }}>{log.serviceType}</span>
-                  <span style={{ fontSize: 12, color: "var(--text-faint)" }}>
-                    {log.returnedAt ? `${fmtDate(log.performedAt)} → ${fmtDate(log.returnedAt)}` : fmtDate(log.performedAt)}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 12, color: "var(--text-faint)" }}>
+                      {log.returnedAt ? `${fmtDate(log.performedAt)} → ${fmtDate(log.returnedAt)}` : fmtDate(log.performedAt)}
+                    </span>
+                    <button
+                      onClick={() => handleDeleteLog(log)}
+                      title="Delete this maintenance record"
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-faint)", opacity: 0.55, fontSize: 13, padding: 2, lineHeight: 1 }}
+                    >
+                      🗑
+                    </button>
+                  </div>
                 </div>
                 {(log.workshop || log.kmAtService) && (
                   <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 3, display: "flex", gap: 12 }}>
