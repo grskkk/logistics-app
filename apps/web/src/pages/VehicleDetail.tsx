@@ -608,16 +608,19 @@ export default function VehicleDetail() {
                       <span style={{ fontSize: 12, color: "var(--accent-soft-text)", opacity: 0.7 }}>
                         ({periodDuration(period)} {periodDuration(period) === 1 ? "day" : "days"})
                       </span>
-                      <button
-                        onClick={() => handleDeletePeriod(period)}
-                        title="Delete this maintenance period"
-                        style={{
-                          marginLeft: "auto", background: "none", border: "none", cursor: "pointer",
-                          color: "var(--accent-soft-text)", opacity: 0.6, fontSize: 14, padding: 2, lineHeight: 1,
-                        }}
-                      >
-                        🗑
-                      </button>
+                      {/* Only past (closed) periods can be deleted — not the ongoing one. */}
+                      {period.endDate && (
+                        <button
+                          onClick={() => handleDeletePeriod(period)}
+                          title="Delete this maintenance period"
+                          style={{
+                            marginLeft: "auto", background: "none", border: "none", cursor: "pointer",
+                            color: "var(--accent-soft-text)", opacity: 0.6, fontSize: 14, padding: 2, lineHeight: 1,
+                          }}
+                        >
+                          🗑
+                        </button>
+                      )}
                     </div>
                     {periodLogs.length > 0 ? (
                       <div style={{ paddingLeft: 4 }}>{periodLogs.map(renderLog)}</div>

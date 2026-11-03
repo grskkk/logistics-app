@@ -52,27 +52,23 @@ router.get("/:vehicleId/periods", async (req, res) => {
   res.json(rows.map(mapPeriod));
 });
 
-// Delete a maintenance period (e.g. one opened by mistake). Logs are linked to
-// a period only by their date falling within it, so they are left untouched and
-// simply fall under "Other Records" afterwards. If the deleted period is the
-// still-open one, the vehicle is returned to operational so it is not left
-// in_maintenance with no tracked period.
+// Delete a past maintenance period (e.g. one logged by mistake). Only closed
+// periods can be removed; the still-open/ongoing one is left alone, since that
+// is what represents the vehicle's current in_maintenance state — use the
+// "Returned from workshop" action to close it instead. Logs are linked to a
+// period only by their date falling within it, so they are left untouched and
+// simply fall under "Other Records" afterwards.
 router.delete("/period/:periodId", async (req, res) => {
   const { rows } = await pool.query(
-    "DELETE FROM maintenance_periods WHERE id = $1 RETURNING vehicle_id, end_date",
+    "SELECT end_date FROM maintenance_periods WHERE id = $1",
     [req.params.periodId]
   );
   if (!rows[0]) return res.status(404).json({ error: "Maintenance period not found" });
-
   if (rows[0].end_date === null) {
-    await pool.query(
-      `UPDATE vehicles
-         SET status = 'operational', maintenance_since = NULL, updated_at = NOW()
-       WHERE id = $1 AND status = 'in_maintenance'`,
-      [rows[0].vehicle_id]
-    );
+    return res.status(400).json({ error: "Cannot delete the ongoing maintenance period" });
   }
 
+  await pool.query("DELETE FROM maintenance_periods WHERE id = $1", [req.params.periodId]);
   res.status(204).end();
 });
 
