@@ -52,6 +52,30 @@ router.get("/:vehicleId/periods", async (req, res) => {
   res.json(rows.map(mapPeriod));
 });
 
+// Delete a maintenance period (e.g. one opened by mistake). Logs are linked to
+// a period only by their date falling within it, so they are left untouched and
+// simply fall under "Other Records" afterwards. If the deleted period is the
+// still-open one, the vehicle is returned to operational so it is not left
+// in_maintenance with no tracked period.
+router.delete("/period/:periodId", async (req, res) => {
+  const { rows } = await pool.query(
+    "DELETE FROM maintenance_periods WHERE id = $1 RETURNING vehicle_id, end_date",
+    [req.params.periodId]
+  );
+  if (!rows[0]) return res.status(404).json({ error: "Maintenance period not found" });
+
+  if (rows[0].end_date === null) {
+    await pool.query(
+      `UPDATE vehicles
+         SET status = 'operational', maintenance_since = NULL, updated_at = NOW()
+       WHERE id = $1 AND status = 'in_maintenance'`,
+      [rows[0].vehicle_id]
+    );
+  }
+
+  res.status(204).end();
+});
+
 router.post("/:vehicleId", async (req, res) => {
   const { serviceType, notes, performedAt, returnedAt, workshop, kmAtService } = req.body;
   const { rows } = await pool.query(
