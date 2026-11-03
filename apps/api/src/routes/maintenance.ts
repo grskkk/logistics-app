@@ -59,6 +59,33 @@ router.post("/:vehicleId", async (req, res) => {
      VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
     [req.params.vehicleId, serviceType, notes ?? null, performedAt, returnedAt ?? null, workshop ?? null, kmAtService ?? null]
   );
+
+  // Logging an open repair (no return date) means the vehicle is going into
+  // maintenance now — flip its status and open a maintenance period
+  // automatically, so it no longer has to be done by hand. A back-dated record
+  // that already has a return date is history and leaves the status untouched.
+  if (!returnedAt) {
+    const { rows: flipped } = await pool.query(
+      `UPDATE vehicles
+         SET status = 'in_maintenance',
+             maintenance_since = COALESCE($2::date, CURRENT_DATE),
+             updated_at = NOW()
+       WHERE id = $1 AND status <> 'in_maintenance'
+       RETURNING id`,
+      [req.params.vehicleId, performedAt ?? null]
+    );
+    if (flipped[0]) {
+      await pool.query(
+        `INSERT INTO maintenance_periods (vehicle_id, start_date)
+         SELECT $1, COALESCE($2::date, CURRENT_DATE)
+         WHERE NOT EXISTS (
+           SELECT 1 FROM maintenance_periods WHERE vehicle_id = $1 AND end_date IS NULL
+         )`,
+        [req.params.vehicleId, performedAt ?? null]
+      );
+    }
+  }
+
   res.status(201).json(mapLog(rows[0]));
 });
 
